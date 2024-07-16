@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+    <h1>PG Student Admin Panel</h1>
+    <div>
+        <h2>Set New PG Student Admin Passkey</h2>
+        <form method="POST" action="{{ url_for('set_pg_student_admin_passkey') }}">
+            <div>
+                <label for="new_passkey">New Passkey</label>
+                <input type="password" name="new_passkey" id="new_passkey" required>
+            </div>
+            <div>
+                <input type="submit" value="Set New Passkey">
+            </div>
+        </form>
+    </div>
+    <div>
+        <h2>View Student Data</h2>
+        <a href="{{ url_for('student_dashboard') }}" class="btn">Go to Student Dashboard</a>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,196 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="home-container">
+    <h1 class="title">Welcome to the Teaching Assistant System</h1>
+    <p class="subtitle">Empowering Education Through Technology</p>
+    <div class="cta-buttons">
+        <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary">Register</a>
+    </div>
+    <div class="features">
+        <div class="feature-card">
+            <i class="fas fa-user-graduate"></i>
+            <h3>Student Portal</h3>
+            <p>Access your courses and assignments</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-chalkboard-teacher"></i>
+            <h3>Teaching Assistant Dashboard</h3>
+            <p>Manage classes and student progress</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-chart-line"></i>
+            <h3>Admin Panel</h3>
+            <p>Oversee system operations and data</p>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block styles %}
+<style>
+    body {
+        background: linear-gradient(135deg, #52585a 0%, #1313d9cf 100%);
+        color: #ffffff;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    /* New navigation styles for home page */
+    .home-page nav ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    .home-page nav ul li {
+        margin: 0 1rem;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .home-page nav ul li a {
+        color: #ffffff;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        padding: 10px 15px;
+        border-radius: 25px;
+        background-color: rgba(255, 255, 255, 0.1);
+        display: inline-block;
+    }
+
+    .home-page nav ul li a:hover {
+        color: #FFD93D;
+        background-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-3px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .home-page nav ul li::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 2px;
+        background-color: #FFD93D;
+        bottom: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        transition: width 0.3s ease;
+    }
+
+    .home-page nav ul li:hover::after {
+        width: 100%;
+    }
+
+    /* Existing home page styles */
+    .home-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 50px 20px;
+        text-align: center;
+    }
+    .title {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        color: #ffffff;
+        letter-spacing: 2px;
+    }
+    .subtitle {
+        font-size: 1.5rem;
+        margin-bottom: 40px;
+        color: #e0e0e0;
+    }
+    .cta-buttons {
+        margin-bottom: 60px;
+    }
+    .btn {
+        display: inline-block;
+        padding: 15px 40px;
+        margin: 0 15px;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .btn-primary {
+        background-color: #FF6B6B;
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    }
+    .btn-secondary {
+        background-color: #1f2524;
+        color: white;
+        box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+    }
+    .btn:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    .features {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+    }
+    .feature-card {
+        background-color: rgba(255,255,255,0.1);
+        border-radius: 20px;
+        padding: 40px;
+        margin: 20px;
+        width: 280px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    .feature-card:hover {
+        transform: translateY(-10px) rotate(2deg);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        background-color: rgba(255,255,255,0.2);
+    }
+    .feature-card i {
+        font-size: 4rem;
+        margin-bottom: 25px;
+        color: #FFD93D;
+        text-shadow: 0 0 10px rgba(255, 217, 61, 0.5);
+    }
+    .feature-card h3 {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+        color: #ffffff;
+    }
+    .feature-card p {
+        font-size: 1.1rem;
+        color: #e0e0e0;
+        line-height: 1.6;
+    }
+    @media (max-width: 768px) {
+        .title {
+            font-size: 3rem;
+        }
+        .subtitle {
+            font-size: 1.3rem;
+        }
+        .features {
+            flex-direction: column;
+            align-items: center;
+        }
+        .btn {
+            display: block;
+            margin: 15px auto;
+        }
+        .home-page nav ul {
+            flex-direction: column;
+            align-items: center;
+        }
+        .home-page nav ul li {
+            margin: 0.5rem 0;
+        }
+    }
+</style>
+{% endblock styles %}

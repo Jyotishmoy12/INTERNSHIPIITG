@@ -1,0 +1,408 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    body {
+        background-color: #f0f4f8;
+        font-family: 'Arial', sans-serif;
+    }
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+        font-size: 2.5rem;
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 2rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    .control-panel {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .control-panel > * {
+        flex: 1;
+    }
+    .btn {
+        background-color: #3498db;
+        color: #ffffff;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 70px;
+    }
+    .btn:hover {
+        background-color: #2980b9;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+    .search-input, .filter-input, #pageSize {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #bdc3c7;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    .search-input:focus, .filter-input:focus, #pageSize:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        outline: none;
+    }
+    .table-container {
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    th, td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+        color: #333333;
+    }
+    th {
+        background-color: #ecf0f1;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+    tr:hover {
+        background-color: #e8f6fd;
+        transition: background-color 0.3s ease;
+    }
+    .filter-row {
+        display: none;
+    }
+    .filter-cell {
+        padding: 0.5rem;
+        background-color: #ecf0f1;
+    }
+    .column-header {
+        cursor: pointer;
+        color: #2c3e50;
+    }
+    .column-header:hover {
+        background-color: #d5dbdb;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 1rem;
+        gap: 0.5rem;
+    }
+    .pagination button {
+        background-color: #95a5a6;
+    }
+    .pagination button:hover {
+        background-color: #7f8c8d;
+    }
+   
+    .column-visibility {
+        position: relative;
+        display: inline-block;
+    }
+    .column-visibility-content {
+        display: none;
+        position: absolute;
+        background-color: #ffffff;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1000;
+        border-radius: 8px;
+        padding: 0.5rem;
+        right: 0;
+        top: 100%;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .column-visibility-btn:focus + .column-visibility-content,
+    .column-visibility-content:hover {
+        display: block;
+    }
+    .column-visibility-content label {
+        display: block;
+        padding: 0.5rem;
+        cursor: pointer;
+        color: #333333;
+    }
+    .column-visibility-content label:hover {
+        background-color: #e8f6fd;
+    }
+</style>
+
+<div class="dashboard-container">
+    <h1>Student Dashboard</h1>
+    {% if current_user.role in ['admin', 'pg_student_admin'] %}
+    <div class="control-panel">
+        {% if current_user.role == 'admin' %}
+        <button id="toggleFilters" class="btn">Toggle Filters</button>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search...">
+        <button id="resetFilters" class="btn">Reset Filters</button>
+        <select id="pageSize" class="btn">
+            <option value="10">10 per page</option>
+            <option value="25">25 per page</option>
+            <option value="50">50 per page</option>
+            <option value="100">100 per page</option>
+        </select>
+        <div class="column-visibility">
+            <button class="btn column-visibility-btn">Column Visibility</button>
+            <div class="column-visibility-content" id="columnVisibility">
+                <!-- Column visibility checkboxes will be added here dynamically -->
+            </div>
+        </div>
+        <button id="downloadExcel" class="btn">Download Excel</button>
+        {% endif %}
+        <a href="{{ url_for('download_all_data') }}" class="btn">Download All Data</a>
+    </div>
+    {% endif %}
+    <div class="table-container">
+        <table id="studentTable">
+            <thead>
+                <tr>
+                    <th class="column-header" data-column="student_name">Name</th>
+                    <th class="column-header" data-column="subject">Subject</th>
+                    <th class="column-header" data-column="subject_type">Type</th>
+                    <th class="column-header" data-column="subject_name">Subject Name</th>
+                    <th class="column-header" data-column="instructor">Instructor</th>
+                    <th class="column-header" data-column="extra_column1">Extra Column 1</th>
+                    <th class="column-header" data-column="extra_column2">Extra Column 2</th>
+                    {% if current_user.role == 'admin' %}
+                    <th>Action</th>
+                    {% endif %}
+                </tr>
+                {% if current_user.role == 'admin' %}
+                <tr class="filter-row">
+                    <th class="filter-cell"><input type="text" class="filter-input" data-column="student_name"></th>
+                    <th class="filter-cell"><input type="text" class="filter-input" data-column="subject"></th>
+                    <th class="filter-cell"><input type="text" class="filter-input" data-column="subject_type"></th>
+                    <th class="filter-cell"><input type="text" class="filter-input" data-column="subject_name"></th>
+                    <th class="filter-cell"><input type="text" class="filter-input" data-column="instructor"></th>
+                    <th class="filter-cell"><input type="text" class="filter-input" data-column="extra_column1"></th>
+                    <th class="filter-cell"><input type="text" class="filter-input" data-column="extra_column2"></th>
+                    <th></th>
+                </tr>
+                {% endif %}
+            </thead>
+            <tbody>
+                {% for data in student_data %}
+                    <tr>
+                        <td>{{ data.student_name }}</td>
+                        <td>{{ data.subject }}</td>
+                        <td>{{ data.subject_type }}</td>
+                        <td>{{ data.subject_name }}</td>
+                        <td>{{ data.instructor }}</td>
+                        <td>{{ data.extra_column1 }}</td>
+                        <td>{{ data.extra_column2 }}</td>
+                        {% if current_user.role == 'admin' %}
+                        <td>
+                            <form action="{{ url_for('delete_student_data', id=data.id) }}" method="POST">
+                                <button type="submit" class="btn">Delete</button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if current_user.role == 'admin' %}
+    <div class="pagination">
+        <button id="prevPage" class="btn">Previous</button>
+        <span id="pageInfo"></span>
+        <button id="nextPage" class="btn">Next</button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('studentTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    let filteredRows = rows;
+    let currentPage = 1;
+    let pageSize = 10;
+
+    const userRole = "{{ user_role }}";
+    const isAdmin = userRole === 'admin';
+    const isPgStudentAdmin = userRole === 'pg_student_admin';
+
+    if (isAdmin || isPgStudentAdmin) {
+        const downloadAllDataBtn = document.querySelector('a[href="{{ url_for("download_all_data") }}"]');
+        if (downloadAllDataBtn) {
+            downloadAllDataBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = "{{ url_for('download_all_data') }}";
+            });
+        }
+
+        if (isAdmin) {
+            const toggleFiltersBtn = document.getElementById('toggleFilters');
+            const resetFiltersBtn = document.getElementById('resetFilters');
+            const searchInput = document.getElementById('searchInput');
+            const filterInputs = document.querySelectorAll('.filter-input');
+            const pageSizeSelect = document.getElementById('pageSize');
+            const prevPageBtn = document.getElementById('prevPage');
+            const nextPageBtn = document.getElementById('nextPage');
+            const pageInfo = document.getElementById('pageInfo');
+            const downloadExcelBtn = document.getElementById('downloadExcel');
+
+            function applyFilters() {
+                filteredRows = rows.filter(row => {
+                    const searchTerm = searchInput.value.toLowerCase();
+                    const rowText = row.textContent.toLowerCase();
+                    if (!rowText.includes(searchTerm)) return false;
+
+                    return Array.from(filterInputs).every(input => {
+                        const filterValue = input.value.toLowerCase();
+                        const cellValue = row.querySelector(`td:nth-child(${input.parentElement.cellIndex + 1})`).textContent.toLowerCase();
+                        return cellValue.includes(filterValue);
+                    });
+                });
+
+                currentPage = 1;
+                displayRows();
+            }
+
+            function displayRows() {
+                const start = (currentPage - 1) * pageSize;
+                const end = start + pageSize;
+                const pageRows = filteredRows.slice(start, end);
+
+                tbody.innerHTML = '';
+                pageRows.forEach(row => tbody.appendChild(row));
+
+                updatePagination();
+            }
+
+            function updatePagination() {
+                const totalPages = Math.ceil(filteredRows.length / pageSize);
+                pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+                prevPageBtn.disabled = currentPage === 1;
+                nextPageBtn.disabled = currentPage === totalPages;
+            }
+
+            toggleFiltersBtn.addEventListener('click', () => {
+                const filterRow = table.querySelector('.filter-row');
+                filterRow.style.display = filterRow.style.display === 'none' ? 'table-row' : 'none';
+            });
+
+            resetFiltersBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                filterInputs.forEach(input => input.value = '');
+                applyFilters();
+            });
+
+            searchInput.addEventListener('input', applyFilters);
+            filterInputs.forEach(input => input.addEventListener('input', applyFilters));
+
+            pageSizeSelect.addEventListener('change', () => {
+                pageSize = parseInt(pageSizeSelect.value);
+                currentPage = 1;
+                displayRows();
+            });
+
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayRows();
+                }
+            });
+
+            nextPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(filteredRows.length / pageSize);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displayRows();
+                }
+            });
+
+            const headers = table.querySelectorAll('.column-header');
+            headers.forEach(header => {
+                header.addEventListener('click', () => {
+                    const column = header.dataset.column;
+                    const ascending = header.classList.toggle('asc');
+
+                    filteredRows.sort((a, b) => {
+                        const aValue = a.querySelector(`td:nth-child(${header.cellIndex + 1})`).textContent;
+                        const bValue = b.querySelector(`td:nth-child(${header.cellIndex + 1})`).textContent;
+                        return ascending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                    });
+
+                    displayRows();
+                });
+            });
+
+            // Column visibility
+            const columnVisibility = document.getElementById('columnVisibility');
+            headers.forEach((header, index) => {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = true;
+                checkbox.id = `col-${index}`;
+
+                const label = document.createElement('label');
+                label.htmlFor = `col-${index}`;
+                label.textContent = header.textContent;
+
+                checkbox.addEventListener('change', () => {
+                    const isHidden = !checkbox.checked;
+                    table.querySelectorAll(`tr > *:nth-child(${index + 1})`).forEach(cell => {
+                        cell.style.display = isHidden ? 'none' : '';
+                    });
+                });
+
+                const div = document.createElement('div');
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                columnVisibility.appendChild(div);
+            });
+
+            // Download Excel
+            downloadExcelBtn.addEventListener('click', () => {
+                const data = filteredRows.map(row => 
+                    Array.from(row.cells).map(cell => cell.textContent)
+                );
+                const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent);
+                const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+            XLSX.writeFile(workbook, "student_data.xlsx");
+        });
+
+        displayRows();
+    }
+}
+});
+</script>
+{% if current_user.role in ['admin', 'pg_student_admin'] %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+{% endif %}
+{% endblock content %}

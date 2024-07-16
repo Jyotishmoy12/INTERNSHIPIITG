@@ -1,0 +1,333 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .button-container {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 400px;
+        margin-bottom: 20px;
+    }
+
+    .admin-btn {
+        background-color: #3498db;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-btn:hover {
+        background-color: #2980b9;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .login-form {
+        width: 100%;
+        max-width: 400px;
+        padding: 30px;
+        border-radius: 15px;
+        background-color: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        transition: transform 0.3s ease;
+    }
+
+    .login-form:hover {
+        transform: translateY(-5px);
+    }
+
+    .login-form h1 {
+        text-align: center;
+        color: #333;
+        font-size: 2.5em;
+        margin-bottom: 30px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .login-form form div {
+        margin-bottom: 20px;
+    }
+
+    .login-form label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: bold;
+    }
+
+    .login-form input[type="text"],
+    .login-form input[type="password"] {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 25px;
+        background-color: #f0f0f0;
+        transition: all 0.3s ease;
+    }
+
+    .login-form input[type="text"]:focus,
+    .login-form input[type="password"]:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #4CAF50;
+    }
+
+    .login-form input[type="submit"] {
+        width: 100%;
+        padding: 12px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1.1em;
+        transition: all 0.3s ease;
+    }
+
+    .login-form input[type="submit"]:hover {
+        background-color: #45a049;
+        transform: scale(1.05);
+    }
+
+    .login-form p {
+        text-align: center;
+        margin-top: 15px;
+        color: #666;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.6);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 30px;
+        border: none;
+        width: 80%;
+        max-width: 350px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .modal-content h2 {
+        margin-top: 0;
+        color: #333;
+        font-size: 1.8em;
+        text-align: center;
+    }
+
+    #admin-passkey-form input[type="password"],
+    #pg-student-admin-passkey-form input[type="password"] {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 15px;
+        border: none;
+        border-radius: 25px;
+        background-color: #f0f0f0;
+    }
+
+    #admin-passkey-form button,
+    #pg-student-admin-passkey-form button {
+        width: 100%;
+        padding: 12px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1.1em;
+        transition: all 0.3s ease;
+    }
+
+    #admin-passkey-form button:hover,
+    #pg-student-admin-passkey-form button:hover {
+        background-color: #2980b9;
+        transform: scale(1.05);
+    }
+
+    #texts {
+        color: #555;
+        font-size: 0.9em;
+    }
+
+    #texts a {
+        color: #3498db;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    #texts a:hover {
+        color: #2980b9;
+        text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+        .button-container {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .admin-btn {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .login-form {
+            padding: 20px;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="button-container">
+        <button id="pg-student-admin-btn" class="admin-btn">PG Student Admin</button>
+        <button id="admin-passkey-btn" class="admin-btn">Admin Access</button>
+    </div>
+
+    <div class="login-form">
+        <h1>Login</h1>
+        <form method="POST" action="">
+            <div>
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" required placeholder="Username">
+            </div>
+            <div>
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required placeholder="Password">
+            </div>
+            <div>
+                <input type="submit" value="Login">
+            </div>
+        </form>
+        <p id="texts">Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+        <p id="texts">Forgot your password? <a href="{{ url_for('forgot_password') }}">Reset it here</a></p>
+    </div>
+</div>
+
+<div id="admin-passkey-modal" class="modal">
+    <div class="modal-content">
+        <h2>Enter Admin Passkey</h2>
+        <form id="admin-passkey-form">
+            <input type="password" id="admin-passkey" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+
+<div id="pg-student-admin-passkey-modal" class="modal">
+    <div class="modal-content">
+        <h2>Enter PG Student Admin Passkey</h2>
+        <form id="pg-student-admin-passkey-form">
+            <input type="password" id="pg-student-admin-passkey" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // JavaScript to handle the modals
+    var adminModal = document.getElementById("admin-passkey-modal");
+    var adminBtn = document.getElementById("admin-passkey-btn");
+    var pgStudentAdminModal = document.getElementById("pg-student-admin-passkey-modal");
+    var pgStudentAdminBtn = document.getElementById("pg-student-admin-btn");
+
+    adminBtn.onclick = function() {
+        adminModal.style.display = "block";
+    }
+
+    pgStudentAdminBtn.onclick = function() {
+        pgStudentAdminModal.style.display = "block";
+    }
+
+    window.onclick = function(event) {
+        if (event.target == adminModal) {
+            adminModal.style.display = "none";
+        }
+        if (event.target == pgStudentAdminModal) {
+            pgStudentAdminModal.style.display = "none";
+        }
+    }
+
+    document.getElementById("admin-passkey-form").addEventListener('submit', function(e) {
+        e.preventDefault();
+        const passkey = document.getElementById('admin-passkey').value;
+
+        fetch('/check_admin_passkey', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `passkey=${encodeURIComponent(passkey)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.valid) {
+                window.location.href = '/admin_register';
+            } else {
+                alert('Invalid passkey');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+
+    document.getElementById("pg-student-admin-passkey-form").addEventListener('submit', function(e) {
+        e.preventDefault();
+        const passkey = document.getElementById('pg-student-admin-passkey').value;
+
+        fetch('/check_pg_student_admin_passkey', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `passkey=${encodeURIComponent(passkey)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.valid) {
+                window.location.href = '/pg_student_admin_register';
+            } else {
+                alert('Invalid passkey');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+</script>
+{% endblock content %}

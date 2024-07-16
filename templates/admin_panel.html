@@ -1,0 +1,181 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .admin-panel {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+        color: #333;
+        margin-bottom: 1rem;
+    }
+    h1 {
+        font-size: 2rem;
+        text-align: center;
+    }
+    h2 {
+        font-size: 1.5rem;
+        margin-top: 2rem;
+    }
+    form {
+        margin-bottom: 1.5rem;
+    }
+    input[type="text"], input[type="file"], input[type="password"] {
+        width: 100%;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    input[type="submit"], button {
+        padding: 0.75rem 1.5rem;
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    input[type="submit"]:hover, button:hover {
+        background-color: #3a7bc8;
+    }
+    .student-data {
+        overflow-x: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        color: black;
+    }
+    th, td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #f8f8f8;
+        font-weight: bold;
+    }
+    .dashboard-links {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 2rem;
+    }
+    .dashboard-links a {
+        padding: 0.75rem 1.5rem;
+        background-color: #4a90e2;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
+    .dashboard-links a:hover {
+        background-color: #3a7bc8;
+    }
+    .delete-all {
+        text-align: right;
+        margin-top: 1rem;
+    }
+    .delete-all input[type="submit"] {
+        background-color: #e74c3c;
+    }
+    .delete-all input[type="submit"]:hover {
+        background-color: #c0392b;
+    }
+    #file-name {
+    margin-left: 10px;
+    color:black;
+}
+</style>
+
+<div class="admin-panel">
+    <h1>Admin Panel</h1>
+
+    <h2>Upload Excel File</h2>
+    <form action="{{ url_for('upload_excel') }}" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" id="file-input" accept=".xlsx, .xls">
+        <span id="file-name"></span>
+        <input type="submit" value="Upload">
+    </form>
+    
+    <script>
+    document.getElementById('file-input').addEventListener('change', function(e) {
+        var fileName = e.target.files[0].name;
+        document.getElementById('file-name').textContent = fileName;
+    });
+    </script>
+
+    <h2>Add Student Data Manually</h2>
+    <form action="{{ url_for('add_student_data') }}" method="POST">
+        <input type="text" name="student_name" placeholder="Student Name" required>
+        <input type="text" name="subject" placeholder="Subject" required>
+        <input type="text" name="subject_type" placeholder="Subject Type">
+        <input type="text" name="subject_name" placeholder="Subject Name">
+        <input type="text" name="instructor" placeholder="Instructor">
+        <input type="text" name="extra_column1" placeholder="Extra Column 1">
+        <input type="text" name="extra_column2" placeholder="Extra Column 2">
+        <input type="submit" value="Add Student Data">
+    </form>
+
+    <h2>Student Data</h2>
+    <div class="student-data">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Subject</th>
+                    <th>Type</th>
+                    <th>Subject Name</th>
+                    <th>Instructor</th>
+                    <th>Extra Column 1</th>
+                    <th>Extra Column 2</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in student_data %}
+                    <tr>
+                        <td>{{ data.student_name }}</td>
+                        <td>{{ data.subject }}</td>
+                        <td>{{ data.subject_type }}</td>
+                        <td>{{ data.subject_name }}</td>
+                        <td>{{ data.instructor }}</td>
+                        <td>{{ data.extra_column1 }}</td>
+                        <td>{{ data.extra_column2 }}</td>
+                        <td>
+                            <form action="{{ url_for('delete_student_data', id=data.id) }}" method="POST">
+                                <input type="submit" value="Delete">
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="delete-all">
+        <form action="{{ url_for('delete_all_student_data') }}" method="POST">
+            <input type="submit" value="Delete All Data">
+        </form>
+    </div>
+
+    <h2>Set New Passkey</h2>
+    <form action="{{ url_for('set_passkey') }}" method="POST">
+        <input type="password" name="new_passkey" placeholder="New Passkey" required>
+        <input type="submit" value="Set New Passkey">
+    </form>
+
+    <h2>Dashboard Links</h2>
+    <div class="dashboard-links">
+        <a href="{{ url_for('student_dashboard') }}">Student Dashboard</a>
+        <a href="{{ url_for('teaching_assistant_dashboard') }}">Teaching Assistant Dashboard</a>
+    </div>
+</div>
+{% endblock content %}

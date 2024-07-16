@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+        font-size: 2.5rem;
+        color: #333;
+        text-align: center;
+        margin-bottom: 2rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    .table-container {
+        overflow-x: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        color: #333;
+        background-color: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    th, td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    th {
+        background-color: #4a90e2;
+        color: white;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    tr:nth-child(even) {
+        background-color: #f8f8f8;
+    }
+    tr:hover {
+        background-color: #e8f4ff;
+        transition: background-color 0.3s ease;
+    }
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 1rem;
+        }
+        th, td {
+            padding: 0.75rem;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <h1>Teaching Assistant Dashboard</h1>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Instructor</th>
+                    <th>Schedule</th>
+                    <th>Number of Students</th>
+                    <th>Office Hours</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Example data, replace with actual data from your database -->
+                <tr>
+                    <td>Introduction to Computer Science</td>
+                    <td>Dr. Smith</td>
+                    <td>Mon, Wed 10:00 AM - 11:30 AM</td>
+                    <td>30</td>
+                    <td>Tue 2:00 PM - 4:00 PM</td>
+                </tr>
+                <tr>
+                    <td>Data Structures</td>
+                    <td>Prof. Johnson</td>
+                    <td>Tue, Thu 1:00 PM - 2:30 PM</td>
+                    <td>25</td>
+                    <td>Wed 3:00 PM - 5:00 PM</td>
+                </tr>
+                <!-- Add more rows as needed -->
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock content %}
