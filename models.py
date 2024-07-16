@@ -21,6 +21,21 @@ class StudentData(db.Model):
     extra_column1 = db.Column(db.String(100))
     extra_column2 = db.Column(db.String(100))
 
+class PGStudentData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_name = db.Column(db.String(100), nullable=False)
+    programme = db.Column(db.String(100))
+    comprehensive_exam_date = db.Column(db.String(100))
+    soas_date = db.Column(db.String(100))
+    synopsis_date = db.Column(db.String(100))
+    defense_date = db.Column(db.String(100))
+    thesis_title = db.Column(db.String(200))
+    supervisor = db.Column(db.String(100))
+    co_supervisor = db.Column(db.String(100))
+    extra_column1 = db.Column(db.String(100))
+    extra_column2 = db.Column(db.String(100))
+
+
 class Passkey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     passkey = db.Column(db.String(20), nullable=False)

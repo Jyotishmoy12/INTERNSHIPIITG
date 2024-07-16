@@ -1,22 +1,95 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="container">
+<style>
+    .admin-panel {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+        color: #007bff;
+        margin-bottom: 20px;
+    }
+    .section {
+        background-color: white;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    form {
+        display: flex;
+        flex-direction: column;
+    }
+    input[type="text"], input[type="file"] {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+    input[type="submit"], .btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    input[type="submit"]:hover, .btn:hover {
+        background-color: #0056b3;
+    }
+    .btn-container {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+    }
+    .btn {
+        text-decoration: none;
+        text-align: center;
+        flex: 1;
+        margin: 0 5px;
+    }
+</style>
+
+<div class="admin-panel">
     <h1>PG Student Admin Panel</h1>
-    <div>
-        <h2>Set New PG Student Admin Passkey</h2>
-        <form method="POST" action="{{ url_for('set_pg_student_admin_passkey') }}">
-            <div>
-                <label for="new_passkey">New Passkey</label>
-                <input type="password" name="new_passkey" id="new_passkey" required>
-            </div>
-            <div>
-                <input type="submit" value="Set New Passkey">
-            </div>
+    
+    <div class="section">
+        <h2>Upload Excel File</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".xlsx" required>
+            <input type="submit" value="Upload Excel">
         </form>
     </div>
-    <div>
-        <h2>View Student Data</h2>
-        <a href="{{ url_for('student_dashboard') }}" class="btn">Go to Student Dashboard</a>
+
+    <div class="section">
+        <h2>Add PG Student Data Manually</h2>
+        <form method="POST">
+            <input type="text" name="student_name" placeholder="Student Name" required>
+            <input type="text" name="programme" placeholder="Programme">
+            <input type="text" name="comprehensive_exam_date" placeholder="Comprehensive Exam Date">
+            <input type="text" name="soas_date" placeholder="SOAS Date">
+            <input type="text" name="synopsis_date" placeholder="Synopsis Date">
+            <input type="text" name="defense_date" placeholder="Defense Date">
+            <input type="text" name="thesis_title" placeholder="Thesis Title">
+            <input type="text" name="supervisor" placeholder="Supervisor">
+            <input type="text" name="co_supervisor" placeholder="Co-Supervisor">
+            <input type="text" name="extra_column1" placeholder="Extra Column 1">
+            <input type="text" name="extra_column2" placeholder="Extra Column 2">
+            <input type="submit" value="Add PG Student Data">
+        </form>
+    </div>
+
+    <div class="section">
+        <h2>View Dashboards</h2>
+        <div class="btn-container">
+            <a href="{{ url_for('pg_student_dashboard') }}" class="btn">Go to PG Student Dashboard</a>
+            <a href="{{ url_for('student_dashboard') }}" class="btn">Go to Student Dashboard</a>
+        </div>
     </div>
 </div>
 {% endblock content %}

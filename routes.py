@@ -2,7 +2,7 @@ from flask import render_template, url_for, flash, redirect, request, jsonify,se
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db
-from models import User, StudentData, Passkey,PGStudentAdminPasskey
+from models import User, StudentData, Passkey,PGStudentAdminPasskey,PGStudentData
 import pandas as pd
 import xlsxwriter
 from io import BytesIO
@@ -393,13 +393,111 @@ def pg_student_admin_login():
             flash('Login Unsuccessful. Please check username and password', 'danger')
     return render_template('pg_student_admin_login.html', title='PG Student Admin Login')
 
-@app.route("/pg_student_admin_panel")
+@app.route("/pg_student_admin_panel", methods=['GET', 'POST'])
 @login_required
 def pg_student_admin_panel():
     if current_user.role != 'pg_student_admin':
         flash('Access denied. You must be a PG Student Admin to view this page.', 'danger')
         return redirect(url_for('home'))
+    
+    if request.method == 'POST':
+        if 'file' in request.files:
+            file = request.files['file']
+            if file and file.filename.endswith('.xlsx'):
+                df = pd.read_excel(file)
+                for _, row in df.iterrows():
+                    pg_student_data = PGStudentData(
+                        student_name=row.get('Names', ''),
+                        programme=row.get('Programme', ''),
+                        comprehensive_exam_date=row.get('Comprehensive Exam Date', ''),
+                        soas_date=row.get('SOAS Date', ''),
+                        synopsis_date=row.get('Synopsis Date', ''),
+                        defense_date=row.get('Defense Date', ''),
+                        thesis_title=row.get('Thesis Title', ''),
+                        supervisor=row.get('Supervisor', ''),
+                        co_supervisor=row.get('Co-Supervisor', ''),
+                        extra_column1='',
+                        extra_column2=''
+                    )
+                    db.session.add(pg_student_data)
+                db.session.commit()
+                flash('Excel data uploaded successfully', 'success')
+                return redirect(url_for('pg_student_dashboard'))
+            else:
+                flash('Invalid file format. Please upload an Excel file.', 'danger')
+        else:
+            # Manual data entry
+            pg_student_data = PGStudentData(
+                student_name=request.form['student_name'],
+                programme=request.form['programme'],
+                comprehensive_exam_date=request.form['comprehensive_exam_date'],
+                soas_date=request.form['soas_date'],
+                synopsis_date=request.form['synopsis_date'],
+                defense_date=request.form['defense_date'],
+                thesis_title=request.form['thesis_title'],
+                supervisor=request.form['supervisor'],
+                co_supervisor=request.form['co_supervisor'],
+                extra_column1=request.form['extra_column1'],
+                extra_column2=request.form['extra_column2']
+            )
+            db.session.add(pg_student_data)
+            db.session.commit()
+            flash('PG Student data added successfully', 'success')
+            return redirect(url_for('pg_student_dashboard'))
+
     return render_template('pg_student_admin_panel.html', title='PG Student Admin Panel')
+
+
+@app.route("/pg_student_dashboard")
+@login_required
+def pg_student_dashboard():
+    if current_user.role not in ['pg_student_admin', 'admin']:
+        flash('Access denied. You must be a PG Student Admin or Admin to view this page.', 'danger')
+        return redirect(url_for('home'))
+
+    pg_student_data = PGStudentData.query.all()
+    return render_template('pg_student_dashboard.html', title='PG Student Dashboard', pg_student_data=pg_student_data)
+
+@app.route("/download_pg_student_data")
+@login_required
+def download_pg_student_data():
+    if current_user.role not in ['pg_student_admin', 'admin']:
+        flash('Access denied. You must be a PG Student Admin or Admin to download data.', 'danger')
+        return redirect(url_for('home'))
+
+    pg_student_data = PGStudentData.query.all()
+
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet()
+
+    # Write headers
+    headers = ['Name', 'Programme', 'Comprehensive Exam Date', 'SOAS Date', 'Synopsis Date', 'Defense Date', 'Thesis Title', 'Supervisor', 'Co-Supervisor', 'Extra Column 1', 'Extra Column 2']
+    for col, header in enumerate(headers):
+        worksheet.write(0, col, header)
+
+    # Write data
+    for row, data in enumerate(pg_student_data, start=1):
+        worksheet.write(row, 0, data.student_name)
+        worksheet.write(row, 1, data.programme)
+        worksheet.write(row, 2, data.comprehensive_exam_date)
+        worksheet.write(row, 3, data.soas_date)
+        worksheet.write(row, 4, data.synopsis_date)
+        worksheet.write(row, 5, data.defense_date)
+        worksheet.write(row, 6, data.thesis_title)
+        worksheet.write(row, 7, data.supervisor)
+        worksheet.write(row, 8, data.co_supervisor)
+        worksheet.write(row, 9, data.extra_column1)
+        worksheet.write(row, 10, data.extra_column2)
+
+    workbook.close()
+    output.seek(0)
+
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    response.headers['Content-Disposition'] = 'attachment; filename=pg_student_data.xlsx'
+
+    return response
 
 @app.route("/pg_student_admin_forgot_password", methods=['GET', 'POST'])
 def pg_student_admin_forgot_password():

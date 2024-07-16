@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+    <h1>PG Student Dashboard</h1>
+    
+    <div>
+        <h2>PG Student Data</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Programme</th>
+                    <th>Comprehensive Exam Date</th>
+                    <th>SOAS Date</th>
+                    <th>Synopsis Date</th>
+                    <th>Defense Date</th>
+                    <th>Thesis Title</th>
+                    <th>Supervisor</th>
+                    <th>Co-Supervisor</th>
+                    <th>Extra Column 1</th>
+                    <th>Extra Column 2</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in pg_student_data %}
+                <tr>
+                    <td>{{ data.student_name }}</td>
+                    <td>{{ data.programme }}</td>
+                    <td>{{ data.comprehensive_exam_date }}</td>
+                    <td>{{ data.soas_date }}</td>
+                    <td>{{ data.synopsis_date }}</td>
+                    <td>{{ data.defense_date }}</td>
+                    <td>{{ data.thesis_title }}</td>
+                    <td>{{ data.supervisor }}</td>
+                    <td>{{ data.co_supervisor }}</td>
+                    <td>{{ data.extra_column1 }}</td>
+                    <td>{{ data.extra_column2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div>
+        <h2>Download PG Student Data</h2>
+        <a href="{{ url_for('download_pg_student_data') }}" class="btn">Download Excel</a>
+    </div>
+</div>
+{% endblock content %}
