@@ -36,6 +36,7 @@ class PGStudentData(db.Model):
     extra_column2 = db.Column(db.String(100))
 
 
+
 class Passkey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     passkey = db.Column(db.String(20), nullable=False)

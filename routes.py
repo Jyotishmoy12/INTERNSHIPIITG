@@ -458,46 +458,6 @@ def pg_student_dashboard():
     pg_student_data = PGStudentData.query.all()
     return render_template('pg_student_dashboard.html', title='PG Student Dashboard', pg_student_data=pg_student_data)
 
-@app.route("/download_pg_student_data")
-@login_required
-def download_pg_student_data():
-    if current_user.role not in ['pg_student_admin', 'admin']:
-        flash('Access denied. You must be a PG Student Admin or Admin to download data.', 'danger')
-        return redirect(url_for('home'))
-
-    pg_student_data = PGStudentData.query.all()
-
-    output = BytesIO()
-    workbook = xlsxwriter.Workbook(output)
-    worksheet = workbook.add_worksheet()
-
-    # Write headers
-    headers = ['Name', 'Programme', 'Comprehensive Exam Date', 'SOAS Date', 'Synopsis Date', 'Defense Date', 'Thesis Title', 'Supervisor', 'Co-Supervisor', 'Extra Column 1', 'Extra Column 2']
-    for col, header in enumerate(headers):
-        worksheet.write(0, col, header)
-
-    # Write data
-    for row, data in enumerate(pg_student_data, start=1):
-        worksheet.write(row, 0, data.student_name)
-        worksheet.write(row, 1, data.programme)
-        worksheet.write(row, 2, data.comprehensive_exam_date)
-        worksheet.write(row, 3, data.soas_date)
-        worksheet.write(row, 4, data.synopsis_date)
-        worksheet.write(row, 5, data.defense_date)
-        worksheet.write(row, 6, data.thesis_title)
-        worksheet.write(row, 7, data.supervisor)
-        worksheet.write(row, 8, data.co_supervisor)
-        worksheet.write(row, 9, data.extra_column1)
-        worksheet.write(row, 10, data.extra_column2)
-
-    workbook.close()
-    output.seek(0)
-
-    response = make_response(output.getvalue())
-    response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    response.headers['Content-Disposition'] = 'attachment; filename=pg_student_data.xlsx'
-
-    return response
 
 @app.route("/pg_student_admin_forgot_password", methods=['GET', 'POST'])
 def pg_student_admin_forgot_password():
@@ -539,3 +499,28 @@ def set_pg_student_admin_passkey():
     
     flash('PG Student Admin Passkey updated successfully', 'success')
     return redirect(url_for('pg_student_admin_panel'))
+
+@app.route("/delete_pg_student_data/<int:id>", methods=['POST'])
+@login_required
+def delete_pg_student_data(id):
+    if current_user.role not in ['pg_student_admin', 'admin']:
+        flash('Access denied. You must be a PG Student Admin or Admin to delete data.', 'danger')
+        return redirect(url_for('home'))
+    pg_student_data = PGStudentData.query.get_or_404(id)
+    db.session.delete(pg_student_data)
+    db.session.commit()
+    flash('PG Student data deleted successfully', 'success')
+    return redirect(url_for('pg_student_dashboard'))
+
+@app.route("/delete_all_pg_student_data", methods=['POST'])
+@login_required
+def delete_all_pg_student_data():
+    if current_user.role not in ['pg_student_admin', 'admin']:
+        flash('Access denied. You must be a PG Student Admin or Admin to delete all data.', 'danger')
+        return redirect(url_for('home'))
+    PGStudentData.query.delete()
+    db.session.commit()
+    flash('All PG Student data deleted successfully', 'success')
+    return redirect(url_for('pg_student_admin_panel'))
+
+
