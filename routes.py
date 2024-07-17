@@ -447,16 +447,199 @@ def pg_student_admin_panel():
 
     return render_template('pg_student_admin_panel.html', title='PG Student Admin Panel')
 
-
-@app.route("/pg_student_dashboard")
+@app.route("/pg_student_dashboard", methods=['GET', 'POST'])
 @login_required
 def pg_student_dashboard():
     if current_user.role not in ['pg_student_admin', 'admin']:
         flash('Access denied. You must be a PG Student Admin or Admin to view this page.', 'danger')
         return redirect(url_for('home'))
 
+    if current_user.role == 'admin':
+        # For admin, fetch all data without filtering
+        pg_student_data = PGStudentData.query.all()
+        programmes = db.session.query(PGStudentData.programme).distinct().all()
+        programmes = [p[0] for p in programmes]
+        return render_template('pg_student_dashboard.html', 
+                               title='PG Student Dashboard', 
+                               pg_student_data=pg_student_data,
+                               programmes=programmes,
+                               is_admin=True)
+    else:
+        # Existing filtering logic for pg_student_admin
+        name_filter = request.args.get('name_filter', '')
+        programme_filter = request.args.get('programme_filter', '')
+        date_from = request.args.get('date_from', '')
+        date_to = request.args.get('date_to', '')
+        supervisor_filter = request.args.get('supervisor_filter', '')
+        search_query = request.args.get('search_query', '')
+
+        query = PGStudentData.query
+
+        if name_filter:
+            query = query.filter(PGStudentData.student_name.ilike(f'%{name_filter}%'))
+        if programme_filter:
+            query = query.filter(PGStudentData.programme == programme_filter)
+        if supervisor_filter:
+            query = query.filter(PGStudentData.supervisor.ilike(f'%{supervisor_filter}%'))
+        if date_from and date_to:
+            date_from = datetime.strptime(date_from, '%Y-%m-%d')
+            date_to = datetime.strptime(date_to, '%Y-%m-%d')
+            query = query.filter(
+                (PGStudentData.comprehensive_exam_date.between(date_from, date_to)) |
+                (PGStudentData.soas_date.between(date_from, date_to)) |
+                (PGStudentData.synopsis_date.between(date_from, date_to)) |
+                (PGStudentData.defense_date.between(date_from, date_to))
+            )
+
+        if search_query:
+            query = query.filter(
+                (PGStudentData.student_name.ilike(f'%{search_query}%')) |
+                (PGStudentData.programme.ilike(f'%{search_query}%')) |
+                (PGStudentData.thesis_title.ilike(f'%{search_query}%')) |
+                (PGStudentData.supervisor.ilike(f'%{search_query}%')) |
+                (PGStudentData.co_supervisor.ilike(f'%{search_query}%'))
+            )
+
+        pg_student_data = query.all()
+
+        programmes = db.session.query(PGStudentData.programme).distinct().all()
+        programmes = [p[0] for p in programmes]
+
+        return render_template('pg_student_dashboard.html', 
+                               title='PG Student Dashboard', 
+                               pg_student_data=pg_student_data,
+                               programmes=programmes,
+                               name_filter=name_filter,
+                               programme_filter=programme_filter,
+                               date_from=date_from,
+                               date_to=date_to,
+                               supervisor_filter=supervisor_filter,
+                               search_query=search_query,
+                               is_admin=False)
+
+
+
+
+@app.route("/download_all_pg_data")
+@login_required
+def download_all_pg_data():
+    if current_user.role != 'admin':
+        flash('Access denied. You must be an Admin to download all data.', 'danger')
+        return redirect(url_for('home'))
+
     pg_student_data = PGStudentData.query.all()
-    return render_template('pg_student_dashboard.html', title='PG Student Dashboard', pg_student_data=pg_student_data)
+
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet()
+
+    headers = ['Name', 'Programme', 'Comprehensive Exam Date', 'SOAS Date', 'Synopsis Date', 'Defense Date', 'Thesis Title', 'Supervisor', 'Co-Supervisor', 'Extra Column 1', 'Extra Column 2']
+    for col, header in enumerate(headers):
+        worksheet.write(0, col, header)
+
+    for row, data in enumerate(pg_student_data, start=1):
+        worksheet.write(row, 0, data.student_name)
+        worksheet.write(row, 1, data.programme)
+        worksheet.write(row, 2, data.comprehensive_exam_date.strftime('%Y-%m-%d') if data.comprehensive_exam_date else '')
+        worksheet.write(row, 3, data.soas_date.strftime('%Y-%m-%d') if data.soas_date else '')
+        worksheet.write(row, 4, data.synopsis_date.strftime('%Y-%m-%d') if data.synopsis_date else '')
+        worksheet.write(row, 5, data.defense_date.strftime('%Y-%m-%d') if data.defense_date else '')
+        worksheet.write(row, 6, data.thesis_title)
+        worksheet.write(row, 7, data.supervisor)
+        worksheet.write(row, 8, data.co_supervisor)
+        worksheet.write(row, 9, data.extra_column1)
+        worksheet.write(row, 10, data.extra_column2)
+
+    workbook.close()
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='all_pg_student_data.xlsx'
+    )
+
+@app.route("/download_filtered_pg_data")
+@login_required
+def download_filtered_pg_data():
+    if current_user.role not in ['pg_student_admin', 'admin']:
+        flash('Access denied. You must be a PG Student Admin or Admin to download data.', 'danger')
+        return redirect(url_for('home'))
+
+    # Get filter and search parameters
+    name_filter = request.args.get('name_filter', '')
+    programme_filter = request.args.get('programme_filter', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    supervisor_filter = request.args.get('supervisor_filter', '')
+    search_query = request.args.get('search_query', '')
+
+    # Base query
+    query = PGStudentData.query
+
+    # Apply filters
+    if name_filter:
+        query = query.filter(PGStudentData.student_name.ilike(f'%{name_filter}%'))
+    if programme_filter:
+        query = query.filter(PGStudentData.programme == programme_filter)
+    if supervisor_filter:
+        query = query.filter(PGStudentData.supervisor.ilike(f'%{supervisor_filter}%'))
+    if date_from and date_to:
+        date_from = datetime.strptime(date_from, '%Y-%m-%d')
+        date_to = datetime.strptime(date_to, '%Y-%m-%d')
+        query = query.filter(
+            (PGStudentData.comprehensive_exam_date.between(date_from, date_to)) |
+            (PGStudentData.soas_date.between(date_from, date_to)) |
+            (PGStudentData.synopsis_date.between(date_from, date_to)) |
+            (PGStudentData.defense_date.between(date_from, date_to))
+        )
+
+    # Apply search
+    if search_query:
+        query = query.filter(
+            (PGStudentData.student_name.ilike(f'%{search_query}%')) |
+            (PGStudentData.programme.ilike(f'%{search_query}%')) |
+            (PGStudentData.thesis_title.ilike(f'%{search_query}%')) |
+            (PGStudentData.supervisor.ilike(f'%{search_query}%')) |
+            (PGStudentData.co_supervisor.ilike(f'%{search_query}%'))
+        )
+
+    pg_student_data = query.all()
+
+    # Create an in-memory output file
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet()
+
+    # Write headers
+    headers = ['Name', 'Programme', 'Comprehensive Exam Date', 'SOAS Date', 'Synopsis Date', 'Defense Date', 'Thesis Title', 'Supervisor', 'Co-Supervisor', 'Extra Column 1', 'Extra Column 2']
+    for col, header in enumerate(headers):
+        worksheet.write(0, col, header)
+
+    # Write data
+    for row, data in enumerate(pg_student_data, start=1):
+        worksheet.write(row, 0, data.student_name)
+        worksheet.write(row, 1, data.programme)
+        worksheet.write(row, 2, data.comprehensive_exam_date.strftime('%Y-%m-%d') if data.comprehensive_exam_date else '')
+        worksheet.write(row, 3, data.soas_date.strftime('%Y-%m-%d') if data.soas_date else '')
+        worksheet.write(row, 4, data.synopsis_date.strftime('%Y-%m-%d') if data.synopsis_date else '')
+        worksheet.write(row, 5, data.defense_date.strftime('%Y-%m-%d') if data.defense_date else '')
+        worksheet.write(row, 6, data.thesis_title)
+        worksheet.write(row, 7, data.supervisor)
+        worksheet.write(row, 8, data.co_supervisor)
+        worksheet.write(row, 9, data.extra_column1)
+        worksheet.write(row, 10, data.extra_column2)
+
+    workbook.close()
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+       download_name='filtered_pg_student_data.xlsx'
+    )
 
 
 @app.route("/pg_student_admin_forgot_password", methods=['GET', 'POST'])

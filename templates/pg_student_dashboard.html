@@ -1,53 +1,283 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="container">
-    <h1>PG Student Dashboard</h1>
+    <h1 class="dashboard-title">PG Student Dashboard</h1>
     
-    <div>
+    {% if is_admin %}
+        <div class="download-section">
+            <a href="{{ url_for('download_all_pg_data') }}" class="btn btn-success">Download All Data</a>
+        </div>
+    {% else %}
+        <div class="filter-section">
+            <h2>Filter and Search Options</h2>
+            <form method="GET" action="{{ url_for('pg_student_dashboard') }}" class="filter-form">
+                <div class="form-group">
+                    <label for="search_query">Search:</label>
+                    <input type="text" id="search_query" name="search_query" value="{{ search_query }}" class="form-control" placeholder="Search across all fields">
+                </div>
+                <div class="form-group">
+                    <label for="name_filter">Name:</label>
+                    <input type="text" id="name_filter" name="name_filter" value="{{ name_filter }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="programme_filter">Programme:</label>
+                    <select id="programme_filter" name="programme_filter" class="form-control">
+                        <option value="">All</option>
+                        {% for programme in programmes %}
+                        <option value="{{ programme }}" {% if programme == programme_filter %}selected{% endif %}>{{ programme }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="date_from">Date From:</label>
+                    <input type="date" id="date_from" name="date_from" value="{{ date_from }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="date_to">Date To:</label>
+                    <input type="date" id="date_to" name="date_to" value="{{ date_to }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="supervisor_filter">Supervisor:</label>
+                    <input type="text" id="supervisor_filter" name="supervisor_filter" value="{{ supervisor_filter }}" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary">Apply Filters and Search</button>
+                <a href="{{ url_for('pg_student_dashboard') }}" class="btn btn-secondary">Reset Filters</a>
+            </form>
+        </div>
+
+        <div class="download-section">
+            <a href="{{ url_for('download_filtered_pg_data', name_filter=name_filter, programme_filter=programme_filter, date_from=date_from, date_to=date_to, supervisor_filter=supervisor_filter, search_query=search_query) }}" class="btn btn-success">Download Filtered Data</a>
+        </div>
+    {% endif %}
+
+    <div class="data-section">
         <h2>PG Student Data</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Programme</th>
-                    <th>Comprehensive Exam Date</th>
-                    <th>SOAS Date</th>
-                    <th>Synopsis Date</th>
-                    <th>Defense Date</th>
-                    <th>Thesis Title</th>
-                    <th>Supervisor</th>
-                    <th>Co-Supervisor</th>
-                    <th>Extra Column 1</th>
-                    <th>Extra Column 2</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for data in pg_student_data %}
-                <tr>
-                    <td>{{ data.student_name }}</td>
-                    <td>{{ data.programme }}</td>
-                    <td>{{ data.comprehensive_exam_date }}</td>
-                    <td>{{ data.soas_date }}</td>
-                    <td>{{ data.synopsis_date }}</td>
-                    <td>{{ data.defense_date }}</td>
-                    <td>{{ data.thesis_title }}</td>
-                    <td>{{ data.supervisor }}</td>
-                    <td>{{ data.co_supervisor }}</td>
-                    <td>{{ data.extra_column1 }}</td>
-                    <td>{{ data.extra_column2 }}</td>
-                    <td>
-                        <form action="{{ url_for('delete_pg_student_data', id=data.id) }}" method="POST">
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this record?');">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Programme</th>
+                        <th>Comprehensive Exam Date</th>
+                        <th>SOAS Date</th>
+                        <th>Synopsis Date</th>
+                        <th>Defense Date</th>
+                        <th>Thesis Title</th>
+                        <th>Supervisor</th>
+                        <th>Co-Supervisor</th>
+                        <th>Extra Column 1</th>
+                        <th>Extra Column 2</th>
+                        {% if not is_admin %}
+                        <th>Action</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in pg_student_data %}
+                    <tr>
+                        <td>{{ data.student_name }}</td>
+                        <td>{{ data.programme }}</td>
+                        <td>{{ data.comprehensive_exam_date }}</td>
+                        <td>{{ data.soas_date }}</td>
+                        <td>{{ data.synopsis_date }}</td>
+                        <td>{{ data.defense_date }}</td>
+                        <td>{{ data.thesis_title }}</td>
+                        <td>{{ data.supervisor }}</td>
+                        <td>{{ data.co_supervisor }}</td>
+                        <td>{{ data.extra_column1 }}</td>
+                        <td>{{ data.extra_column2 }}</td>
+                        {% if not is_admin %}
+                        <td>
+                            <form action="{{ url_for('delete_pg_student_data', id=data.id) }}" method="POST">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this record?');">Delete</button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-
-   
-
 </div>
+
+<style>
+    body {
+        background-color: #f4f4f4;
+        color: #333;
+    }
+    .navigation-buttons {
+        margin-bottom: 20px;
+        text-align: right;
+    }
+
+    .btn-info {
+        background-color: #3498db;
+        color: white;
+    }
+
+    .btn-info:hover {
+        background-color: #2980b9;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    .btn-secondary {
+        background-color: #95a5a6;
+    }
+
+    .btn-secondary:hover {
+        background-color: #7f8c8d;
+    }
+
+    .container {
+        max-width: 95%;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .dashboard-title {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2.5em;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .filter-section, .data-section {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    .filter-section h2, .data-section h2 {
+        color: #34495e;
+        margin-bottom: 20px;
+        font-size: 1.8em;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 10px;
+    }
+
+    .filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .form-group {
+        flex: 1 1 200px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        color: #333;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        color: white;
+    }
+
+    .btn-primary {
+        background-color: #3498db;
+    }
+
+    .btn-primary:hover {
+        background-color: #2980b9;
+    }
+
+    .btn-success {
+        background-color: #2ecc71;
+    }
+
+    .btn-success:hover {
+        background-color: #27ae60;
+    }
+
+    .download-section {
+        text-align: right;
+        margin-bottom: 20px;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table th, .table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+        color: #333;
+    }
+
+    .table thead th {
+        background-color: #3498db;
+        color: white;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+
+    .btn-danger {
+        background-color: #e74c3c;
+    }
+
+    .btn-danger:hover {
+        background-color: #c0392b;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 10px;
+        }
+
+        .dashboard-title {
+            font-size: 2em;
+        }
+
+        .filter-section h2, .data-section h2 {
+            font-size: 1.5em;
+        }
+    }
+
+    .button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.btn-secondary {
+    background-color: red;
+}
+
+.btn-secondary:hover {
+    background-color: rgb(143, 16, 16);
+}
+</style>
 {% endblock content %}
