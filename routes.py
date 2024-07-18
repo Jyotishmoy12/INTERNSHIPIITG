@@ -2,7 +2,7 @@ from flask import render_template, url_for, flash, redirect, request, jsonify,se
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db
-from models import User, StudentData, Passkey,PGStudentAdminPasskey,PGStudentData, EquipmentAdminPasskey
+from models import User, StudentData, Passkey,PGStudentAdminPasskey,PGStudentData, EquipmentAdminPasskey, Equipment
 import pandas as pd
 import xlsxwriter
 from io import BytesIO
@@ -707,11 +707,7 @@ def delete_all_pg_student_data():
     return redirect(url_for('pg_student_admin_panel'))
 
 
-from flask import render_template, url_for, flash, redirect, request, jsonify, session, send_file, make_response
-from flask_login import login_user, current_user, logout_user, login_required
-from werkzeug.security import generate_password_hash, check_password_hash
-from app import app, db
-from models import User, StudentData, Passkey, PGStudentAdminPasskey, EquipmentAdminPasskey
+
 
 # ... (keep all existing routes)
 
@@ -765,13 +761,58 @@ def equipment_admin_login():
             flash('Login Unsuccessful. Please check username and password', 'danger')
     return render_template('equipment_admin_login.html', title='Equipment Admin Login')
 
-@app.route("/equipment_admin_panel")
+@app.route("/equipment_admin_panel", methods=['GET', 'POST'])
 @login_required
 def equipment_admin_panel():
     if current_user.role != 'equipment_admin':
         flash('Access denied. You must be an Equipment Admin to view this page.', 'danger')
         return redirect(url_for('home'))
-    return render_template('equipment_admin_panel.html', title='Equipment Admin Panel')
+    
+    if request.method == 'POST':
+        if 'file' in request.files:
+            file = request.files['file']
+            if file and file.filename.endswith('.xlsx'):
+                df = pd.read_excel(file)
+                for _, row in df.iterrows():
+                    equipment = Equipment(
+                        sl_no=str(row.get('Sl No', '')),
+                        description=str(row.get('Description of Item', '')),
+                        po_no_date=str(row.get('P.O. No.with Date', '')),
+                        quantity=str(row.get('Qty.', '')),
+                        price=str(row.get('Price mentioned in the Asset Register', '')),
+                        location=str(row.get('Location', '')),
+                        dept_stock_register_no=str(row.get('Dept. Stock Register No.', '')),
+                        status=str(row.get('Status', '')),
+                        remarks=str(row.get('Remarks', '')),
+                        extra_column1='',
+                        extra_column2=''
+                    )
+                    db.session.add(equipment)
+                db.session.commit()
+                flash('Excel data uploaded successfully', 'success')
+            else:
+                flash('Invalid file format. Please upload an Excel file.', 'danger')
+        else:
+            # Manual data entry
+            equipment = Equipment(
+                # sl_no=request.form['sl_no'],
+                description=request.form['description'],
+                po_no_date=request.form['po_no_date'],
+                quantity=request.form['quantity'],
+                price=request.form['price'],
+                location=request.form['location'],
+                dept_stock_register_no=request.form['dept_stock_register_no'],
+                status=request.form['status'],
+                remarks=request.form['remarks'],
+                extra_column1=request.form['extra_column1'],
+                extra_column2=request.form['extra_column2']
+            )
+            db.session.add(equipment)
+            db.session.commit()
+            flash('Equipment data added successfully', 'success')
+
+    equipment_data = Equipment.query.all()
+    return render_template('equipment_admin_panel.html', title='Equipment Admin Panel', equipment_data=equipment_data)
 
 @app.route("/equipment_admin_forgot_password", methods=['GET', 'POST'])
 def equipment_admin_forgot_password():
@@ -812,4 +853,84 @@ def set_equipment_admin_passkey():
     db.session.commit()
     
     flash('Equipment Admin Passkey updated successfully', 'success')
+    return redirect(url_for('equipment_admin_panel'))
+
+@app.route("/delete_equipment/<int:id>", methods=['POST'])
+@login_required
+def delete_equipment(id):
+    if current_user.role != 'equipment_admin':
+        flash('Access denied. You must be an Equipment Admin to delete equipment data.', 'danger')
+        return redirect(url_for('home'))
+    equipment = Equipment.query.get_or_404(id)
+    db.session.delete(equipment)
+    db.session.commit()
+    flash('Equipment data deleted successfully', 'success')
+    return redirect(url_for('equipment_dashboard'))
+
+@app.route("/download_equipment_data")
+@login_required
+def download_equipment_data():
+    if current_user.role != 'equipment_admin':
+        flash('Access denied. You must be an Equipment Admin to download data.', 'danger')
+        return redirect(url_for('home'))
+
+    equipment_data = Equipment.query.all()
+
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet()
+
+    headers = ['Sl No', 'Description of Item', 'P.O. No.with Date', 'Qty.', 'Price mentioned in the Asset Register', 'Location', 'Dept. Stock Register No.', 'Status', 'Remarks', 'Extra Column 1', 'Extra Column 2']
+    for col, header in enumerate(headers):
+        worksheet.write(0, col, header)
+
+    for row, data in enumerate(equipment_data, start=1):
+        worksheet.write(row, 0, data.sl_no)
+        worksheet.write(row, 1, data.description)
+        worksheet.write(row, 2, data.po_no_date)
+        worksheet.write(row, 3, data.quantity)
+        worksheet.write(row, 4, data.price)
+        worksheet.write(row, 5, data.location)
+        worksheet.write(row, 6, data.dept_stock_register_no)
+        worksheet.write(row, 7, data.status)
+        worksheet.write(row, 8, data.remarks)
+        worksheet.write(row, 9, data.extra_column1)
+        worksheet.write(row, 10, data.extra_column2)
+
+    workbook.close()
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='equipment_data.xlsx'
+    )
+
+
+@app.route("/equipment_dashboard")
+@login_required
+def equipment_dashboard():
+    if current_user.role not in ['equipment_admin', 'admin']:
+        flash('Access denied. You must be an Equipment Admin or Admin to view this page.', 'danger')
+        return redirect(url_for('home'))
+    query = Equipment.query
+    page = request.args.get('page', 1, type=int)
+    equipment_data = query.paginate(page=page, per_page=10)
+
+    return render_template('equipment_dashboard.html', 
+                           title='Equipment Dashboard', 
+                           equipment_data=equipment_data)
+
+
+@app.route("/delete_all_equipment", methods=['POST'])
+@login_required
+def delete_all_equipment():
+    if current_user.role != 'equipment_admin':
+        flash('Access denied. You must be an Equipment Admin to delete all equipment data.', 'danger')
+        return redirect(url_for('home'))
+    
+    Equipment.query.delete()
+    db.session.commit()
+    flash('All equipment data has been deleted successfully', 'success')
     return redirect(url_for('equipment_admin_panel'))

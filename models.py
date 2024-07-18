@@ -1,3 +1,5 @@
+# models.py
+
 from app import db, login_manager
 from flask_login import UserMixin
 
@@ -35,8 +37,6 @@ class PGStudentData(db.Model):
     extra_column1 = db.Column(db.String(100))
     extra_column2 = db.Column(db.String(100))
 
-
-
 class Passkey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     passkey = db.Column(db.String(20), nullable=False)
@@ -48,3 +48,17 @@ class PGStudentAdminPasskey(db.Model):
 class EquipmentAdminPasskey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     passkey = db.Column(db.String(20), nullable=False)
+
+class Equipment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sl_no = db.Column(db.String(20))
+    description = db.Column(db.String(200))
+    po_no_date = db.Column(db.String(100))
+    quantity = db.Column(db.String(20))
+    price = db.Column(db.String(50))
+    location = db.Column(db.String(100))
+    dept_stock_register_no = db.Column(db.String(50))
+    status = db.Column(db.String(50))
+    remarks = db.Column(db.String(200))
+    extra_column1 = db.Column(db.String(100))
+    extra_column2 = db.Column(db.String(100))
