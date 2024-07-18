@@ -7,6 +7,7 @@ import pandas as pd
 import xlsxwriter
 from io import BytesIO
 from datetime import datetime
+import io 
 
 @app.route("/")
 def home():
@@ -68,42 +69,45 @@ def forgot_password():
 @app.route("/student_dashboard")
 @login_required
 def student_dashboard():
-    if current_user.role not in ['student', 'admin', 'pg_student_admin']:
-        flash('Access denied. You must be a student or admin to view this page.', 'danger')
+    if current_user.role not in ['student', 'admin', 'pg_student_admin', 'equipment_admin']:
+        flash('Access denied. You must be a student, admin, PG student admin, or equipment admin to view this page.', 'danger')
+        return redirect(url_for('home'))
+
+    if current_user.role in ['admin', 'equipment_admin']:
+        # For admin and equipment_admin, fetch all data without filtering
+        student_data = StudentData.query.all()
+        return render_template('student_dashboard.html', 
+                               title='Student Dashboard', 
+                               student_data=student_data,
+                               user_role=current_user.role,
+                               is_admin=True)
+    else:
+        # Existing logic for students and pg_student_admin
+        student_data = StudentData.query.all()
+        return render_template('student_dashboard.html', 
+                               title='Student Dashboard', 
+                               student_data=student_data,
+                               user_role=current_user.role,
+                               is_admin=False)
+
+
+@app.route("/download_all_student_data")
+@login_required
+def download_all_student_data():
+    if current_user.role not in ['admin', 'pg_student_admin', 'equipment_admin']:
+        flash('Access denied. You must be an Admin, PG Student Admin, or Equipment Admin to download all data.', 'danger')
         return redirect(url_for('home'))
 
     student_data = StudentData.query.all()
-    
-    return render_template('student_dashboard.html', 
-                           title='Student Dashboard', 
-                           student_data=student_data,
-                           user_role=current_user.role)
-
-
-@app.route("/download_filtered_data")
-@login_required
-def download_filtered_data():
-    if current_user.role != 'admin':
-        flash('Access denied. You must be an admin to download data.', 'danger')
-        return redirect(url_for('home'))
-
-    type_filter = request.args.get('type_filter', '')
-    
-    if type_filter:
-        student_data = StudentData.query.filter_by(subject_type=type_filter).all()
-    else:
-        student_data = StudentData.query.all()
 
     output = BytesIO()
     workbook = xlsxwriter.Workbook(output)
     worksheet = workbook.add_worksheet()
 
-    # Write headers
     headers = ['Name', 'Subject', 'Type', 'Subject Name', 'Instructor', 'Extra Column 1', 'Extra Column 2']
     for col, header in enumerate(headers):
         worksheet.write(0, col, header)
 
-    # Write data
     for row, data in enumerate(student_data, start=1):
         worksheet.write(row, 0, data.student_name)
         worksheet.write(row, 1, data.subject)
@@ -116,11 +120,12 @@ def download_filtered_data():
     workbook.close()
     output.seek(0)
 
-    response = make_response(output.getvalue())
-    response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    response.headers['Content-Disposition'] = 'attachment; filename=filtered_student_data.xlsx'
-
-    return response
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='all_student_data.xlsx'
+    )
 
 
 @app.route("/download_all_data")
@@ -450,12 +455,12 @@ def pg_student_admin_panel():
 @app.route("/pg_student_dashboard", methods=['GET', 'POST'])
 @login_required
 def pg_student_dashboard():
-    if current_user.role not in ['pg_student_admin', 'admin']:
-        flash('Access denied. You must be a PG Student Admin or Admin to view this page.', 'danger')
+    if current_user.role not in ['pg_student_admin', 'admin', 'equipment_admin']:
+        flash('Access denied. You must be a PG Student Admin, Admin, or Equipment Admin to view this page.', 'danger')
         return redirect(url_for('home'))
 
-    if current_user.role == 'admin':
-        # For admin, fetch all data without filtering
+    if current_user.role in ['admin', 'equipment_admin']:
+        # For admin and equipment_admin, fetch all data without filtering
         pg_student_data = PGStudentData.query.all()
         programmes = db.session.query(PGStudentData.programme).distinct().all()
         programmes = [p[0] for p in programmes]
@@ -520,11 +525,12 @@ def pg_student_dashboard():
 
 
 
+
 @app.route("/download_all_pg_data")
 @login_required
 def download_all_pg_data():
-    if current_user.role != 'admin':
-        flash('Access denied. You must be an Admin to download all data.', 'danger')
+    if current_user.role not in ['admin', 'pg_student_admin', 'equipment_admin']:
+        flash('Access denied. You must be an Admin, PG Student Admin, or Equipment Admin to download all data.', 'danger')
         return redirect(url_for('home'))
 
     pg_student_data = PGStudentData.query.all()
@@ -537,13 +543,21 @@ def download_all_pg_data():
     for col, header in enumerate(headers):
         worksheet.write(0, col, header)
 
+    def format_date(date_value):
+        if isinstance(date_value, datetime):
+            return date_value.strftime('%Y-%m-%d')
+        elif isinstance(date_value, str):
+            return date_value
+        else:
+            return ''
+
     for row, data in enumerate(pg_student_data, start=1):
         worksheet.write(row, 0, data.student_name)
         worksheet.write(row, 1, data.programme)
-        worksheet.write(row, 2, data.comprehensive_exam_date.strftime('%Y-%m-%d') if data.comprehensive_exam_date else '')
-        worksheet.write(row, 3, data.soas_date.strftime('%Y-%m-%d') if data.soas_date else '')
-        worksheet.write(row, 4, data.synopsis_date.strftime('%Y-%m-%d') if data.synopsis_date else '')
-        worksheet.write(row, 5, data.defense_date.strftime('%Y-%m-%d') if data.defense_date else '')
+        worksheet.write(row, 2, format_date(data.comprehensive_exam_date))
+        worksheet.write(row, 3, format_date(data.soas_date))
+        worksheet.write(row, 4, format_date(data.synopsis_date))
+        worksheet.write(row, 5, format_date(data.defense_date))
         worksheet.write(row, 6, data.thesis_title)
         worksheet.write(row, 7, data.supervisor)
         worksheet.write(row, 8, data.co_supervisor)
@@ -867,45 +881,6 @@ def delete_equipment(id):
     flash('Equipment data deleted successfully', 'success')
     return redirect(url_for('equipment_dashboard'))
 
-@app.route("/download_equipment_data")
-@login_required
-def download_equipment_data():
-    if current_user.role != 'equipment_admin':
-        flash('Access denied. You must be an Equipment Admin to download data.', 'danger')
-        return redirect(url_for('home'))
-
-    equipment_data = Equipment.query.all()
-
-    output = BytesIO()
-    workbook = xlsxwriter.Workbook(output)
-    worksheet = workbook.add_worksheet()
-
-    headers = ['Sl No', 'Description of Item', 'P.O. No.with Date', 'Qty.', 'Price mentioned in the Asset Register', 'Location', 'Dept. Stock Register No.', 'Status', 'Remarks', 'Extra Column 1', 'Extra Column 2']
-    for col, header in enumerate(headers):
-        worksheet.write(0, col, header)
-
-    for row, data in enumerate(equipment_data, start=1):
-        worksheet.write(row, 0, data.sl_no)
-        worksheet.write(row, 1, data.description)
-        worksheet.write(row, 2, data.po_no_date)
-        worksheet.write(row, 3, data.quantity)
-        worksheet.write(row, 4, data.price)
-        worksheet.write(row, 5, data.location)
-        worksheet.write(row, 6, data.dept_stock_register_no)
-        worksheet.write(row, 7, data.status)
-        worksheet.write(row, 8, data.remarks)
-        worksheet.write(row, 9, data.extra_column1)
-        worksheet.write(row, 10, data.extra_column2)
-
-    workbook.close()
-    output.seek(0)
-
-    return send_file(
-        output,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        as_attachment=True,
-        download_name='equipment_data.xlsx'
-    )
 
 
 @app.route("/equipment_dashboard")
@@ -934,3 +909,56 @@ def delete_all_equipment():
     db.session.commit()
     flash('All equipment data has been deleted successfully', 'success')
     return redirect(url_for('equipment_admin_panel'))
+
+
+@app.route('/download_filtered_equipment_data')
+def download_filtered_equipment_data():
+    search_query = request.args.get('search_query', '')
+    status_filter = request.args.get('status_filter', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+
+    # Apply filters to your query
+    query = Equipment.query
+    if search_query:
+        query = query.filter(Equipment.description.ilike(f'%{search_query}%'))
+    if status_filter:
+        query = query.filter(Equipment.status == status_filter)
+    if date_from and date_to:
+        query = query.filter(Equipment.po_no_date.between(date_from, date_to))
+
+    # Get filtered data
+    filtered_data = query.all()
+
+    # Create Excel file
+    output = io.BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet()
+
+    # Write headers
+    headers = ['Description', 'P.O. No. with Date', 'Qty.', 'Price', 'Location', 'Dept. Stock Register No.', 'Status', 'Remarks', 'Extra Column 1', 'Extra Column 2']
+    for col, header in enumerate(headers):
+        worksheet.write(0, col, header)
+
+    # Write data
+    for row, equipment in enumerate(filtered_data, start=1):
+        worksheet.write(row, 0, equipment.description)
+        worksheet.write(row, 1, equipment.po_no_date)
+        worksheet.write(row, 2, equipment.quantity)
+        worksheet.write(row, 3, equipment.price)
+        worksheet.write(row, 4, equipment.location)
+        worksheet.write(row, 5, equipment.dept_stock_register_no)
+        worksheet.write(row, 6, equipment.status)
+        worksheet.write(row, 7, equipment.remarks)
+        worksheet.write(row, 8, equipment.extra_column1)
+        worksheet.write(row, 9, equipment.extra_column2)
+
+    workbook.close()
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='filtered_equipment_data.xlsx'
+    )

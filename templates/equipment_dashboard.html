@@ -1,51 +1,191 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="content-section">
+<style>
+    .dashboard {
+        font-family: 'Roboto', Arial, sans-serif;
+        background-color: #f5f7fa;
+        padding: 40px;
+        color: #2c3e50;
+    }
+    h1 {
+        color: #34495e;
+        text-align: center;
+        margin-bottom: 40px;
+        font-weight: 300;
+        font-size: 2.5em;
+    }
+    .filter-section {
+        background-color: #fff;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 40px;
+    }
+    .filter-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        align-items: end;
+    }
+    .filter-form input, .filter-form select {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #bdc3c7;
+        border-radius: 6px;
+        color: #34495e;
+        font-size: 14px;
+    }
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .btn-primary {
+        background-color: #3498db;
+        color: white;
+    }
+    .btn-success {
+        background-color: #2ecc71;
+        color: white;
+    }
+    .btn-danger {
+        background-color: #e74c3c;
+        color: white;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    th, td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #ecf0f1;
+    }
+    th {
+        background-color: #34495e;
+        color: white;
+        font-weight: 500;
+        text-transform: uppercase;
+        font-size: 14px;
+    }
+    tr:last-child td {
+        border-bottom: none;
+    }
+    tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+    tr:hover {
+        background-color: #e8f4fd;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        list-style: none;
+        padding: 0;
+        margin-top: 30px;
+    }
+    .page-item {
+        margin: 0 5px;
+    }
+    .page-link {
+        padding: 10px 15px;
+        border: 1px solid #bdc3c7;
+        color: #3498db;
+        text-decoration: none;
+        border-radius: 6px;
+        background-color: white;
+        transition: all 0.3s ease;
+    }
+    .page-item.active .page-link, .page-link:hover {
+        background-color: #3498db;
+        color: white;
+        border-color: #3498db;
+    }
+    .action-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+    .action-buttons .btn {
+        margin: 0 10px;
+    }
+</style>
+
+<div class="dashboard">
     <h1>Equipment Dashboard</h1>
 
+    <div class="filter-section">
+        <form class="filter-form" method="GET" action="{{ url_for('equipment_dashboard') }}">
+            <input type="text" name="search_query" placeholder="Search..." value="{{ search_query }}">
+            <select name="status_filter">
+                <option value="">All Statuses</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+            <input type="date" name="date_from" placeholder="From Date">
+            <input type="date" name="date_to" placeholder="To Date">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+    </div>
+
     <!-- Equipment Data Table -->
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <!-- <th>Sl No</th> -->
-                <th>Description</th>
-                <th>P.O. No. with Date</th>
-                <th>Qty.</th>
-                <th>Price</th>
-                <th>Location</th>
-                <th>Dept. Stock Register No.</th>
-                <th>Status</th>
-                <th>Remarks</th>
-                <th>Extra Column 1</th>
-                <th>Extra Column 2</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for equipment in equipment_data.items %}
-            <tr>
-                <td>{{ equipment.description }}</td>
-                <td>{{ equipment.po_no_date }}</td>
-                <td>{{ equipment.quantity }}</td>
-                <td>{{ equipment.price }}</td>
-                <td>{{ equipment.location }}</td>
-                <td>{{ equipment.dept_stock_register_no }}</td>
-                <td>{{ equipment.status }}</td>
-                <td>{{ equipment.remarks }}</td>
-                <td>{{ equipment.extra_column1 }}</td>
-                <td>{{ equipment.extra_column2 }}</td>
-                <td>
-                    <form action="{{ url_for('delete_equipment', id=equipment.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this equipment data?');">
-                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>P.O. No. with Date</th>
+                    <th>Qty.</th>
+                    <th>Price</th>
+                    <th>Location</th>
+                    <th>Dept. Stock Register No.</th>
+                    <th>Status</th>
+                    <th>Remarks</th>
+                    <th>Extra Column 1</th>
+                    <th>Extra Column 2</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for equipment in equipment_data.items %}
+                <tr>
+                    <td>{{ equipment.description }}</td>
+                    <td>{{ equipment.po_no_date }}</td>
+                    <td>{{ equipment.quantity }}</td>
+                    <td>{{ equipment.price }}</td>
+                    <td>{{ equipment.location }}</td>
+                    <td>{{ equipment.dept_stock_register_no }}</td>
+                    <td>{{ equipment.status }}</td>
+                    <td>{{ equipment.remarks }}</td>
+                    <td>{{ equipment.extra_column1 }}</td>
+                    <td>{{ equipment.extra_column2 }}</td>
+                    <td>
+                        <form action="{{ url_for('delete_equipment', id=equipment.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this equipment data?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     <!-- Pagination -->
     <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
+        <ul class="pagination">
             {% for page_num in equipment_data.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
                 {% if page_num %}
                     {% if equipment_data.page == page_num %}
@@ -66,11 +206,9 @@
         </ul>
     </nav>
 
-    <!-- Download Button -->
-    <div class="text-center mt-4">
-        <a href="{{ url_for('download_equipment_data') }}" class="btn btn-success">Download Equipment Data</a>
-    </div>
-    <div class="mt-4">
+    <!-- Download and Admin Panel Buttons -->
+    <div class="action-buttons">
+        <a href="{{ url_for('download_filtered_equipment_data', search_query=search_query, status_filter=status_filter) }}" class="btn btn-success">Download Filtered Data (Excel)</a>
         <a href="{{ url_for('equipment_admin_panel') }}" class="btn btn-primary">View Equipment Admin Panel</a>
     </div>
 </div>

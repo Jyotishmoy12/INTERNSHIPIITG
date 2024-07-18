@@ -1,92 +1,246 @@
 <!-- equipment_admin_panel.html -->
 {% extends "layout.html" %}
 {% block content %}
-<div class="content-section">
-    <h1>Equipment Admin Panel</h1>
-    <p>Welcome to the Equipment Admin Panel. Here you can manage equipment-related tasks.</p>
-    <div class="mt-4">
-        <a href="{{ url_for('equipment_dashboard') }}" class="btn btn-primary">View Equipment Dashboard</a>
-    </div>
-    <div class="mt-4">
-        <h3>Delete All Equipment Data</h3>
-        <form action="{{ url_for('delete_all_equipment') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL equipment data? This action cannot be undone.');">
-            <button type="submit" class="btn btn-danger">Delete All Equipment Data</button>
-        </form>
-    </div>
-    <!-- Set New Passkey Form -->
-    <div class="mt-4">
-        <h3>Set New Equipment Admin Passkey</h3>
-        <form method="POST" action="{{ url_for('set_equipment_admin_passkey') }}">
-            <div class="form-group">
-                <label for="new_passkey">New Passkey:</label>
-                <input type="password" class="form-control" id="new_passkey" name="new_passkey" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Set New Passkey</button>
-        </form>
-    </div>
+<style>
+    .admin-panel {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f0f4f8;
+        color: #333;
+        line-height: 1.6;
+    }
 
-    <!-- Upload Excel File Form -->
-    <div class="mt-4">
-        <h3>Upload Equipment Data (Excel)</h3>
-        <form method="POST" action="{{ url_for('equipment_admin_panel') }}" enctype="multipart/form-data">
-            <div class="form-group">
-                <input type="file" class="form-control-file" id="file" name="file" accept=".xlsx" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Upload Excel</button>
-        </form>
-    </div>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
 
-    <!-- Manual Data Entry Form -->
-    <div class="mt-4">
-        <h3>Add Equipment Data Manually</h3>
-        <form method="POST" action="{{ url_for('equipment_admin_panel') }}">
-            <div class="form-group">
-                <label for="sl_no">Sl No:</label>
-                <input type="text" class="form-control" id="sl_no" name="sl_no" required>
-            </div>
-            <div class="form-group">
-                <label for="description">Description of Item:</label>
-                <input type="text" class="form-control" id="description" name="description" required>
-            </div>
-            <div class="form-group">
-                <label for="po_no_date">P.O. No. with Date:</label>
-                <input type="text" class="form-control" id="po_no_date" name="po_no_date" required>
-            </div>
-            <div class="form-group">
-                <label for="quantity">Qty.:</label>
-                <input type="text" class="form-control" id="quantity" name="quantity" required>
-            </div>
-            <div class="form-group">
-                <label for="price">Price mentioned in the Asset Register:</label>
-                <input type="text" class="form-control" id="price" name="price" required>
-            </div>
-            <div class="form-group">
-                <label for="location">Location:</label>
-                <input type="text" class="form-control" id="location" name="location" required>
-            </div>
-            <div class="form-group">
-                <label for="dept_stock_register_no">Dept. Stock Register No.:</label>
-                <input type="text" class="form-control" id="dept_stock_register_no" name="dept_stock_register_no" required>
-            </div>
-            <div class="form-group">
-                <label for="status">Status:</label>
-                <input type="text" class="form-control" id="status" name="status" required>
-            </div>
-            <div class="form-group">
-                <label for="remarks">Remarks:</label>
-                <input type="text" class="form-control" id="remarks" name="remarks">
-            </div>
-            <div class="form-group">
-                <label for="extra_column1">Extra Column 1:</label>
-                <input type="text" class="form-control" id="extra_column1" name="extra_column1">
-            </div>
-            <div class="form-group">
-                <label for="extra_column2">Extra Column 2:</label>
-                <input type="text" class="form-control" id="extra_column2" name="extra_column2">
-            </div>
-            <button type="submit" class="btn btn-primary">Add Equipment</button>
-        </form>
-    </div>
+    h1 {
+        text-align: center;
+        color: #2c3e50;
+        font-size: 2.5em;
+        margin-bottom: 30px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
 
-    
+    .panel-description {
+        text-align: center;
+        font-size: 1.1em;
+        color: #34495e;
+        margin-bottom: 40px;
+    }
+
+    .dashboard-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 40px;
+    }
+
+    .dashboard-btn {
+        flex: 1;
+        margin: 0 10px;
+        padding: 15px;
+        font-size: 1em;
+        text-align: center;
+        text-decoration: none;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-primary { background-color: #3498db; }
+    .btn-secondary { background-color: #95a5a6; }
+    .btn-info { background-color: #5bc0de; }
+    .btn-danger { background-color: #e74c3c; }
+    .btn-success { background-color: #2ecc71; }
+
+    .dashboard-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .admin-sections {
+        display: flex;
+        flex-wrap: wrap;
+        margin: -15px;
+    }
+
+    .admin-section {
+        flex: 1 1 calc(50% - 30px);
+        margin: 15px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .section-header {
+        background-color: #34495e;
+        color: #fff;
+        padding: 15px 20px;
+        font-size: 1.2em;
+    }
+
+    .section-content {
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        color: #2c3e50;
+        font-weight: bold;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1em;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        font-size: 1em;
+        text-align: center;
+        text-decoration: none;
+        background-color: #3498db;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+        background-color: #2980b9;
+    }
+
+    .btn-block {
+        display: block;
+        width: 100%;
+    }
+
+    @media (max-width: 768px) {
+        .admin-section {
+            flex: 1 1 100%;
+        }
+        .dashboard-buttons {
+            flex-direction: column;
+        }
+        .dashboard-btn {
+            margin: 10px 0;
+        }
+    }
+</style>
+
+<div class="admin-panel">
+    <div class="container">
+        <h1>Equipment Admin Panel</h1>
+        <p class="panel-description">Welcome to the Equipment Admin Panel. Here you can manage equipment-related tasks.</p>
+
+        <div class="dashboard-buttons">
+            <a href="{{ url_for('equipment_dashboard') }}" class="dashboard-btn btn-primary">View Equipment Dashboard</a>
+            <a href="{{ url_for('pg_student_dashboard') }}" class="dashboard-btn btn-secondary">PG Student Dashboard</a>
+            <a href="{{ url_for('student_dashboard') }}" class="dashboard-btn btn-info">Student Dashboard</a>
+        </div>
+
+        <div class="admin-sections">
+            <div class="admin-section">
+                <div class="section-header">Delete All Equipment Data</div>
+                <div class="section-content">
+                    <form action="{{ url_for('delete_all_equipment') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL equipment data? This action cannot be undone.');">
+                        <button type="submit" class="btn btn-danger btn-block">Delete All Equipment Data</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <div class="section-header">Set New Equipment Admin Passkey</div>
+                <div class="section-content">
+                    <form method="POST" action="{{ url_for('set_equipment_admin_passkey') }}">
+                        <div class="form-group">
+                            <label for="new_passkey">New Passkey:</label>
+                            <input type="password" id="new_passkey" name="new_passkey" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Set New Passkey</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <div class="section-header">Upload Equipment Data (Excel)</div>
+                <div class="section-content">
+                    <form method="POST" action="{{ url_for('equipment_admin_panel') }}" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <input type="file" id="file" name="file" accept=".xlsx" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Upload Excel</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="admin-section" style="flex-basis: 100%;">
+                <div class="section-header">Add Equipment Data Manually</div>
+                <div class="section-content">
+                    <form method="POST" action="{{ url_for('equipment_admin_panel') }}">
+                        <div class="form-group">
+                            <label for="description">Description of Item:</label>
+                            <input type="text" id="description" name="description" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="po_no_date">P.O. No. with Date:</label>
+                            <input type="text" id="po_no_date" name="po_no_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="quantity">Qty.:</label>
+                            <input type="text" id="quantity" name="quantity" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="price">Price mentioned in the Asset Register:</label>
+                            <input type="text" id="price" name="price" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location:</label>
+                            <input type="text" id="location" name="location" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dept_stock_register_no">Dept. Stock Register No.:</label>
+                            <input type="text" id="dept_stock_register_no" name="dept_stock_register_no" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status:</label>
+                            <input type="text" id="status" name="status" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="remarks">Remarks:</label>
+                            <input type="text" id="remarks" name="remarks">
+                        </div>
+                        <div class="form-group">
+                            <label for="extra_column1">Extra Column 1:</label>
+                            <input type="text" id="extra_column1" name="extra_column1">
+                        </div>
+                        <div class="form-group">
+                            <label for="extra_column2">Extra Column 2:</label>
+                            <input type="text" id="extra_column2" name="extra_column2">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Add Equipment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}

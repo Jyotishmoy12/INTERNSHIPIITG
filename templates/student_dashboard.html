@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 <style>
-    body {
+     body {
         background-color: #f0f4f8;
         font-family: 'Arial', sans-serif;
     }
@@ -159,7 +159,6 @@
 
 <div class="dashboard-container">
     <h1>Student Dashboard</h1>
-    {% if current_user.role in ['admin', 'pg_student_admin'] %}
     <div class="control-panel">
         {% if current_user.role == 'admin' %}
         <button id="toggleFilters" class="btn">Toggle Filters</button>
@@ -179,9 +178,13 @@
         </div>
         <button id="downloadExcel" class="btn">Download Excel</button>
         {% endif %}
+        {% if current_user.role == 'equipment_admin' %}
+        <button id="downloadAllData" class="btn">Download All Data</button>
+        {% endif %}
+        {% if current_user.role == 'pg_student_admin' %}
         <a href="{{ url_for('download_all_data') }}" class="btn">Download All Data</a>
+        {% endif %}
     </div>
-    {% endif %}
     <div class="table-container">
         <table id="studentTable">
             <thead>
@@ -250,148 +253,140 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPage = 1;
     let pageSize = 10;
 
-    const userRole = "{{ user_role }}";
+    const userRole = "{{ current_user.role }}";
     const isAdmin = userRole === 'admin';
     const isPgStudentAdmin = userRole === 'pg_student_admin';
+    const isEquipmentAdmin = userRole === 'equipment_admin';
 
-    if (isAdmin || isPgStudentAdmin) {
-        const downloadAllDataBtn = document.querySelector('a[href="{{ url_for("download_all_data") }}"]');
-        if (downloadAllDataBtn) {
-            downloadAllDataBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                window.location.href = "{{ url_for('download_all_data') }}";
+    if (isAdmin) {
+        const toggleFiltersBtn = document.getElementById('toggleFilters');
+        const resetFiltersBtn = document.getElementById('resetFilters');
+        const searchInput = document.getElementById('searchInput');
+        const filterInputs = document.querySelectorAll('.filter-input');
+        const pageSizeSelect = document.getElementById('pageSize');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const pageInfo = document.getElementById('pageInfo');
+        const downloadExcelBtn = document.getElementById('downloadExcel');
+
+        function applyFilters() {
+            filteredRows = rows.filter(row => {
+                const searchTerm = searchInput.value.toLowerCase();
+                const rowText = row.textContent.toLowerCase();
+                if (!rowText.includes(searchTerm)) return false;
+
+                return Array.from(filterInputs).every(input => {
+                    const filterValue = input.value.toLowerCase();
+                    const cellValue = row.querySelector(`td:nth-child(${input.parentElement.cellIndex + 1})`).textContent.toLowerCase();
+                    return cellValue.includes(filterValue);
+                });
             });
+
+            currentPage = 1;
+            displayRows();
         }
 
-        if (isAdmin) {
-            const toggleFiltersBtn = document.getElementById('toggleFilters');
-            const resetFiltersBtn = document.getElementById('resetFilters');
-            const searchInput = document.getElementById('searchInput');
-            const filterInputs = document.querySelectorAll('.filter-input');
-            const pageSizeSelect = document.getElementById('pageSize');
-            const prevPageBtn = document.getElementById('prevPage');
-            const nextPageBtn = document.getElementById('nextPage');
-            const pageInfo = document.getElementById('pageInfo');
-            const downloadExcelBtn = document.getElementById('downloadExcel');
+        function displayRows() {
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageRows = filteredRows.slice(start, end);
 
-            function applyFilters() {
-                filteredRows = rows.filter(row => {
-                    const searchTerm = searchInput.value.toLowerCase();
-                    const rowText = row.textContent.toLowerCase();
-                    if (!rowText.includes(searchTerm)) return false;
+            tbody.innerHTML = '';
+            pageRows.forEach(row => tbody.appendChild(row));
 
-                    return Array.from(filterInputs).every(input => {
-                        const filterValue = input.value.toLowerCase();
-                        const cellValue = row.querySelector(`td:nth-child(${input.parentElement.cellIndex + 1})`).textContent.toLowerCase();
-                        return cellValue.includes(filterValue);
-                    });
-                });
+            updatePagination();
+        }
 
-                currentPage = 1;
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredRows.length / pageSize);
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages;
+        }
+
+        toggleFiltersBtn.addEventListener('click', () => {
+            const filterRow = table.querySelector('.filter-row');
+            filterRow.style.display = filterRow.style.display === 'none' ? 'table-row' : 'none';
+        });
+
+        resetFiltersBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            filterInputs.forEach(input => input.value = '');
+            applyFilters();
+        });
+
+        searchInput.addEventListener('input', applyFilters);
+        filterInputs.forEach(input => input.addEventListener('input', applyFilters));
+
+        pageSizeSelect.addEventListener('change', () => {
+            pageSize = parseInt(pageSizeSelect.value);
+            currentPage = 1;
+            displayRows();
+        });
+
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
                 displayRows();
             }
+        });
 
-            function displayRows() {
-                const start = (currentPage - 1) * pageSize;
-                const end = start + pageSize;
-                const pageRows = filteredRows.slice(start, end);
-
-                tbody.innerHTML = '';
-                pageRows.forEach(row => tbody.appendChild(row));
-
-                updatePagination();
+        nextPageBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(filteredRows.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayRows();
             }
+        });
 
-            function updatePagination() {
-                const totalPages = Math.ceil(filteredRows.length / pageSize);
-                pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-                prevPageBtn.disabled = currentPage === 1;
-                nextPageBtn.disabled = currentPage === totalPages;
-            }
+        const headers = table.querySelectorAll('.column-header');
+        headers.forEach(header => {
+            header.addEventListener('click', () => {
+                const column = header.dataset.column;
+                const ascending = header.classList.toggle('asc');
 
-            toggleFiltersBtn.addEventListener('click', () => {
-                const filterRow = table.querySelector('.filter-row');
-                filterRow.style.display = filterRow.style.display === 'none' ? 'table-row' : 'none';
-            });
+                filteredRows.sort((a, b) => {
+                    const aValue = a.querySelector(`td:nth-child(${header.cellIndex + 1})`).textContent;
+                    const bValue = b.querySelector(`td:nth-child(${header.cellIndex + 1})`).textContent;
+                    return ascending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+                });
 
-            resetFiltersBtn.addEventListener('click', () => {
-                searchInput.value = '';
-                filterInputs.forEach(input => input.value = '');
-                applyFilters();
-            });
-
-            searchInput.addEventListener('input', applyFilters);
-            filterInputs.forEach(input => input.addEventListener('input', applyFilters));
-
-            pageSizeSelect.addEventListener('change', () => {
-                pageSize = parseInt(pageSizeSelect.value);
-                currentPage = 1;
                 displayRows();
             });
+        });
 
-            prevPageBtn.addEventListener('click', () => {
-                if (currentPage > 1) {
-                    currentPage--;
-                    displayRows();
-                }
-            });
+        // Column visibility
+        const columnVisibility = document.getElementById('columnVisibility');
+        headers.forEach((header, index) => {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = true;
+            checkbox.id = `col-${index}`;
 
-            nextPageBtn.addEventListener('click', () => {
-                const totalPages = Math.ceil(filteredRows.length / pageSize);
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    displayRows();
-                }
-            });
+            const label = document.createElement('label');
+            label.htmlFor = `col-${index}`;
+            label.textContent = header.textContent;
 
-            const headers = table.querySelectorAll('.column-header');
-            headers.forEach(header => {
-                header.addEventListener('click', () => {
-                    const column = header.dataset.column;
-                    const ascending = header.classList.toggle('asc');
-
-                    filteredRows.sort((a, b) => {
-                        const aValue = a.querySelector(`td:nth-child(${header.cellIndex + 1})`).textContent;
-                        const bValue = b.querySelector(`td:nth-child(${header.cellIndex + 1})`).textContent;
-                        return ascending ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-                    });
-
-                    displayRows();
+            checkbox.addEventListener('change', () => {
+                const isHidden = !checkbox.checked;
+                table.querySelectorAll(`tr > *:nth-child(${index + 1})`).forEach(cell => {
+                    cell.style.display = isHidden ? 'none' : '';
                 });
             });
 
-            // Column visibility
-            const columnVisibility = document.getElementById('columnVisibility');
-            headers.forEach((header, index) => {
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.checked = true;
-                checkbox.id = `col-${index}`;
+            const div = document.createElement('div');
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            columnVisibility.appendChild(div);
+        });
 
-                const label = document.createElement('label');
-                label.htmlFor = `col-${index}`;
-                label.textContent = header.textContent;
-
-                checkbox.addEventListener('change', () => {
-                    const isHidden = !checkbox.checked;
-                    table.querySelectorAll(`tr > *:nth-child(${index + 1})`).forEach(cell => {
-                        cell.style.display = isHidden ? 'none' : '';
-                    });
-                });
-
-                const div = document.createElement('div');
-                div.appendChild(checkbox);
-                div.appendChild(label);
-                columnVisibility.appendChild(div);
-            });
-
-            // Download Excel
-            downloadExcelBtn.addEventListener('click', () => {
-                const data = filteredRows.map(row => 
-                    Array.from(row.cells).map(cell => cell.textContent)
-                );
-                const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent);
-                const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+        // Download Excel (filtered data for admin)
+        downloadExcelBtn.addEventListener('click', () => {
+            const data = filteredRows.map(row => 
+                Array.from(row.cells).map(cell => cell.textContent)
+            );
+            const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent);
+            const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
             XLSX.writeFile(workbook, "student_data.xlsx");
@@ -399,10 +394,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
         displayRows();
     }
-}
+
+    if (isEquipmentAdmin) {
+        const downloadAllDataBtn = document.getElementById('downloadAllData');
+        
+        downloadAllDataBtn.addEventListener('click', () => {
+            // Get all rows from the table, including those not currently displayed
+            const allRows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Extract data from all rows
+            const data = allRows.map(row => 
+                Array.from(row.cells).map(cell => cell.textContent)
+            );
+            
+            // Get headers
+            const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent);
+            
+            // Create workbook and worksheet
+            const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "All Students");
+            
+            // Generate and download the Excel file
+            XLSX.writeFile(workbook, "all_student_data.xlsx");
+        });
+    }
+
+    if (isPgStudentAdmin) {
+        const downloadAllDataBtn = document.querySelector('a[href="{{ url_for("download_all_data") }}"]');
+        if (downloadAllDataBtn) {
+            downloadAllDataBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = "{{ url_for('download_all_data') }}";
+            });
+        }
+    }
 });
 </script>
-{% if current_user.role in ['admin', 'pg_student_admin'] %}
+
+{% if current_user.role in ['admin', 'equipment_admin', 'pg_student_admin'] %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 {% endif %}
 {% endblock content %}
