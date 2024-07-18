@@ -2,7 +2,7 @@ from flask import render_template, url_for, flash, redirect, request, jsonify,se
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db
-from models import User, StudentData, Passkey,PGStudentAdminPasskey,PGStudentData
+from models import User, StudentData, Passkey,PGStudentAdminPasskey,PGStudentData, EquipmentAdminPasskey
 import pandas as pd
 import xlsxwriter
 from io import BytesIO
@@ -707,3 +707,109 @@ def delete_all_pg_student_data():
     return redirect(url_for('pg_student_admin_panel'))
 
 
+from flask import render_template, url_for, flash, redirect, request, jsonify, session, send_file, make_response
+from flask_login import login_user, current_user, logout_user, login_required
+from werkzeug.security import generate_password_hash, check_password_hash
+from app import app, db
+from models import User, StudentData, Passkey, PGStudentAdminPasskey, EquipmentAdminPasskey
+
+# ... (keep all existing routes)
+
+@app.route("/check_equipment_admin_passkey", methods=['POST'])
+def check_equipment_admin_passkey():
+    passkey = request.form['passkey']
+    stored_passkey = EquipmentAdminPasskey.query.first()
+    if stored_passkey and passkey == stored_passkey.passkey:
+        session['equipment_admin_passkey_verified'] = True
+        return jsonify({'valid': True})
+    else:
+        return jsonify({'valid': False})
+
+@app.route("/equipment_admin_register", methods=['GET', 'POST'])
+def equipment_admin_register():
+    if not session.get('equipment_admin_passkey_verified'):
+        flash('Please enter the Equipment Admin passkey first.', 'danger')
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('Username already exists. Please choose a different one.', 'danger')
+            return render_template('equipment_admin_register.html', title='Equipment Admin Register')
+        
+        user = User(username=username, password=generate_password_hash(password), role='equipment_admin')
+        db.session.add(user)
+        db.session.commit()
+        
+        session.pop('equipment_admin_passkey_verified', None)  # Clear the session variable
+        flash('Your Equipment Admin account has been created! You can now log in.', 'success')
+        return redirect(url_for('equipment_admin_login'))
+    
+    return render_template('equipment_admin_register.html', title='Equipment Admin Register')
+
+@app.route("/equipment_admin_login", methods=['GET', 'POST'])
+def equipment_admin_login():
+    if current_user.is_authenticated and current_user.role == 'equipment_admin':
+        return redirect(url_for('equipment_admin_panel'))
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username, role='equipment_admin').first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('equipment_admin_panel'))
+        else:
+            flash('Login Unsuccessful. Please check username and password', 'danger')
+    return render_template('equipment_admin_login.html', title='Equipment Admin Login')
+
+@app.route("/equipment_admin_panel")
+@login_required
+def equipment_admin_panel():
+    if current_user.role != 'equipment_admin':
+        flash('Access denied. You must be an Equipment Admin to view this page.', 'danger')
+        return redirect(url_for('home'))
+    return render_template('equipment_admin_panel.html', title='Equipment Admin Panel')
+
+@app.route("/equipment_admin_forgot_password", methods=['GET', 'POST'])
+def equipment_admin_forgot_password():
+    if request.method == 'POST':
+        username = request.form['username']
+        new_password = request.form['new_password']
+        admin_passkey = request.form['admin_passkey']
+        
+        stored_passkey = EquipmentAdminPasskey.query.first()
+        if not stored_passkey or admin_passkey != stored_passkey.passkey:
+            flash('Invalid Equipment Admin passkey. Please try again.', 'danger')
+            return render_template('equipment_admin_forgot_password.html', title='Equipment Admin Forgot Password')
+        
+        user = User.query.filter_by(username=username, role='equipment_admin').first()
+        if user:
+            user.password = generate_password_hash(new_password)
+            db.session.commit()
+            flash('Your Equipment Admin password has been updated. You can now log in with your new password.', 'success')
+            return redirect(url_for('equipment_admin_login'))
+        else:
+            flash('Equipment Admin username not found. Please check and try again.', 'danger')
+    return render_template('equipment_admin_forgot_password.html', title='Equipment Admin Forgot Password')
+
+@app.route("/set_equipment_admin_passkey", methods=['POST'])
+@login_required
+def set_equipment_admin_passkey():
+    if current_user.role != 'equipment_admin':
+        flash('Access denied. You must be an Equipment Admin to set a new passkey.', 'danger')
+        return redirect(url_for('home'))
+    
+    new_passkey = request.form['new_passkey']
+    passkey = EquipmentAdminPasskey.query.first()
+    if passkey:
+        passkey.passkey = new_passkey
+    else:
+        passkey = EquipmentAdminPasskey(passkey=new_passkey)
+        db.session.add(passkey)
+    db.session.commit()
+    
+    flash('Equipment Admin Passkey updated successfully', 'success')
+    return redirect(url_for('equipment_admin_panel'))

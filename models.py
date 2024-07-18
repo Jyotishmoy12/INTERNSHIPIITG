@@ -44,3 +44,7 @@ class Passkey(db.Model):
 class PGStudentAdminPasskey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     passkey = db.Column(db.String(20), nullable=False)
+
+class EquipmentAdminPasskey(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    passkey = db.Column(db.String(20), nullable=False)

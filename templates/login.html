@@ -208,12 +208,39 @@
             padding: 20px;
         }
     }
+
+    #equipment-admin-passkey-form input[type="password"] {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 15px;
+        border: none;
+        border-radius: 25px;
+        background-color: #f0f0f0;
+    }
+
+    #equipment-admin-passkey-form button {
+        width: 100%;
+        padding: 12px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 1.1em;
+        transition: all 0.3s ease;
+    }
+
+    #equipment-admin-passkey-form button:hover {
+        background-color: #2980b9;
+        transform: scale(1.05);
+    }
 </style>
 
 <div class="container">
     <div class="button-container">
         <button id="pg-student-admin-btn" class="admin-btn">PG Student Admin</button>
         <button id="admin-passkey-btn" class="admin-btn">Admin Access</button>
+        <button id="equipment-admin-btn" class="admin-btn">Equipment Admin</button>
     </div>
 
     <div class="login-form">
@@ -256,8 +283,39 @@
     </div>
 </div>
 
+
+<div id="equipment-admin-passkey-modal" class="modal">
+    <div class="modal-content">
+        <h2>Enter Equipment Admin Passkey</h2>
+        <form id="equipment-admin-passkey-form">
+            <input type="password" id="equipment-admin-passkey" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+
 <script>
     // JavaScript to handle the modals
+    var equipmentAdminModal = document.getElementById("equipment-admin-passkey-modal");
+    var equipmentAdminBtn = document.getElementById("equipment-admin-btn");
+
+    equipmentAdminBtn.onclick = function() {
+        equipmentAdminModal.style.display = "block";
+    }
+
+    window.onclick = function(event) {
+        if (event.target == adminModal) {
+            adminModal.style.display = "none";
+        }
+        if (event.target == pgStudentAdminModal) {
+            pgStudentAdminModal.style.display = "none";
+        }
+        if (event.target == equipmentAdminModal) {
+            equipmentAdminModal.style.display = "none";
+        }
+    }
+
+
     var adminModal = document.getElementById("admin-passkey-modal");
     var adminBtn = document.getElementById("admin-passkey-btn");
     var pgStudentAdminModal = document.getElementById("pg-student-admin-passkey-modal");
@@ -320,6 +378,31 @@
         .then(data => {
             if (data.valid) {
                 window.location.href = '/pg_student_admin_register';
+            } else {
+                alert('Invalid passkey');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+
+    document.getElementById("equipment-admin-passkey-form").addEventListener('submit', function(e) {
+        e.preventDefault();
+        const passkey = document.getElementById('equipment-admin-passkey').value;
+
+        fetch('/check_equipment_admin_passkey', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `passkey=${encodeURIComponent(passkey)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.valid) {
+                window.location.href = '/equipment_admin_register';
             } else {
                 alert('Invalid passkey');
             }

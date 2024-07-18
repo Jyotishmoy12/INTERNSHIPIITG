@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+    <h1>Equipment Admin Panel</h1>
+    <p>Welcome to the Equipment Admin Panel. Here you can manage equipment-related tasks.</p>
+    
+    <!-- Set New Passkey Form -->
+    <div class="mt-4">
+        <h3>Set New Equipment Admin Passkey</h3>
+        <form method="POST" action="{{ url_for('set_equipment_admin_passkey') }}">
+            <div class="form-group">
+                <label for="new_passkey">New Passkey:</label>
+                <input type="password" class="form-control" id="new_passkey" name="new_passkey" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Set New Passkey</button>
+        </form>
+    </div>
+
+    <!-- Add more content and functionality specific to Equipment Admin here -->
+</div>
+{% endblock content %}

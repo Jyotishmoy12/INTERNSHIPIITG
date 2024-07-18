@@ -1,0 +1,122 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .content-section {
+        max-width: 400px;
+        margin: 50px auto;
+        background-color: #2c3e50;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .border-bottom {
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 15px;
+        margin-bottom: 25px;
+    }
+
+    legend {
+        font-size: 24px;
+        font-weight: 600;
+        color: #ecf0f1;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-control-label {
+        font-weight: 500;
+        margin-bottom: 8px;
+        display: block;
+        color: #bdc3c7;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 15px;
+        background-color: #34495e;
+        border: 1px solid #465c6e;
+        border-radius: 4px;
+        color: #ecf0f1;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
+        outline: none;
+    }
+
+    .btn-outline-info {
+        width: 300px;
+        padding: 12px;
+        background-color: #3498db;
+        border: none;
+        border-radius: 4px;
+        color: #ecf0f1;
+        font-size: 18px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-outline-info:hover {
+        background-color: #2980b9;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+    }
+
+    .border-top {
+        border-top: 1px solid #465c6e;
+        margin-top: 25px;
+        padding-top: 20px;
+    }
+
+    .text-muted {
+        color: #bdc3c7 !important;
+        text-align: center;
+    }
+
+    .text-muted a {
+        color: #3498db;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .text-muted a:hover {
+        color: #2980b9;
+        text-decoration: underline;
+    }
+</style>
+
+<div class="content-section">
+    <form method="POST" action="">
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Equipment Admin Login</legend>
+            <div class="form-group">
+                <label class="form-control-label" for="username">Username</label>
+                <input class="form-control" id="username" name="username" required type="text" value="" placeholder="Enter your username">
+            </div>
+            <div class="form-group">
+                <label class="form-control-label" for="password">Password</label>
+                <input class="form-control" id="password" name="password" required type="password" value="" placeholder="Enter your password">
+            </div>
+        </fieldset>
+        <div class="form-group">
+            <input class="btn btn-outline-info" id="submit" name="submit" type="submit" value="Login">
+        </div>
+    </form>
+    <div class="border-top pt-3">
+        <small class="text-muted">
+            Forgot Password? <a class="ml-2" href="{{ url_for('equipment_admin_forgot_password') }}">Reset Password</a>
+        </small>
+    </div>
+</div>
+{% endblock content %}
