@@ -49,6 +49,10 @@ class EquipmentAdminPasskey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     passkey = db.Column(db.String(20), nullable=False)
 
+class SpaceAdminPasskey(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    passkey = db.Column(db.String(20), nullable=False)    
+
 class Equipment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sl_no = db.Column(db.String(20))

@@ -2,7 +2,7 @@ from flask import render_template, url_for, flash, redirect, request, jsonify,se
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db
-from models import User, StudentData, Passkey,PGStudentAdminPasskey,PGStudentData, EquipmentAdminPasskey, Equipment
+from models import User, StudentData, Passkey,PGStudentAdminPasskey,PGStudentData, EquipmentAdminPasskey, Equipment, SpaceAdminPasskey
 import pandas as pd
 import xlsxwriter
 from io import BytesIO
@@ -962,3 +962,80 @@ def download_filtered_equipment_data():
         as_attachment=True,
         download_name='filtered_equipment_data.xlsx'
     )
+
+
+@app.route('/check_space_admin_passkey', methods=['POST'])
+def check_space_admin_passkey():
+    passkey = request.form.get('passkey')
+    valid_passkey = SpaceAdminPasskey.query.first()
+    
+    if valid_passkey and passkey == valid_passkey.passkey:
+        return jsonify({'valid': True})
+    return jsonify({'valid': False})
+
+@app.route('/space_admin_register', methods=['GET', 'POST'])
+def space_admin_register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(username=username).first()
+        if user:
+            flash('Username already exists', 'error')
+            return redirect(url_for('space_admin_register'))
+        
+        new_user = User(username=username, password=generate_password_hash(password), role='space_admin')
+        db.session.add(new_user)
+        db.session.commit()
+        
+        flash('Registration successful. Please log in.', 'success')
+        return redirect(url_for('space_admin_login'))
+    
+    return render_template('space_admin_register.html')
+
+@app.route('/space_admin_login', methods=['GET', 'POST'])
+def space_admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(username=username, role='space_admin').first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('space_admin_panel'))
+        else:
+            flash('Invalid username or password', 'error')
+    
+    return render_template('space_admin_login.html')
+
+@app.route('/space_admin_panel')
+@login_required
+def space_admin_panel():
+    if current_user.role != 'space_admin':
+        flash('You do not have permission to access this page', 'error')
+        return redirect(url_for('login'))
+    
+    return render_template('space_admin_panel.html')
+
+
+@app.route("/space_admin_forgot_password", methods=['GET', 'POST'])
+def space_admin_forgot_password():
+    if request.method == 'POST':
+        username = request.form['username']
+        new_password = request.form['new_password']
+        admin_passkey = request.form['admin_passkey']
+        
+        stored_passkey = SpaceAdminPasskey.query.first()
+        if not stored_passkey or admin_passkey != stored_passkey.passkey:
+            flash('Invalid Space Admin passkey. Please try again.', 'danger')
+            return render_template('space_admin_forgot_password.html', title='Space Admin Forgot Password')
+        
+        user = User.query.filter_by(username=username, role='space_admin').first()
+        if user:
+            user.password = generate_password_hash(new_password)
+            db.session.commit()
+            flash('Your Space Admin password has been updated. You can now log in with your new password.', 'success')
+            return redirect(url_for('space_admin_login'))
+        else:
+            flash('Space Admin username not found. Please check and try again.', 'danger')
+    return render_template('space_admin_forgot_password.html', title='Space Admin Forgot Password')

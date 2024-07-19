@@ -6,23 +6,28 @@
         font-family: 'Arial', sans-serif;
         margin: 0;
         padding: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
     }
 
     .container {
+        flex: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: 100vh;
         padding: 20px;
         box-sizing: border-box;
     }
 
     .button-container {
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
         width: 100%;
-        max-width: 400px;
+        max-width: 600px;
         margin-bottom: 20px;
     }
 
@@ -36,6 +41,9 @@
         font-size: 0.9em;
         transition: all 0.3s ease;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        flex: 1;
+        min-width: 120px;
+        max-width: 200px;
     }
 
     .admin-btn:hover {
@@ -139,6 +147,7 @@
         max-width: 350px;
         border-radius: 15px;
         box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        position: relative;
     }
 
     .modal-content h2 {
@@ -146,10 +155,10 @@
         color: #333;
         font-size: 1.8em;
         text-align: center;
+        padding-right: 30px;
     }
 
-    #admin-passkey-form input[type="password"],
-    #pg-student-admin-passkey-form input[type="password"] {
+    .modal-content input[type="password"] {
         width: 100%;
         padding: 12px;
         margin-bottom: 15px;
@@ -158,8 +167,7 @@
         background-color: #f0f0f0;
     }
 
-    #admin-passkey-form button,
-    #pg-student-admin-passkey-form button {
+    .modal-content button {
         width: 100%;
         padding: 12px;
         background-color: #3498db;
@@ -171,8 +179,7 @@
         transition: all 0.3s ease;
     }
 
-    #admin-passkey-form button:hover,
-    #pg-student-admin-passkey-form button:hover {
+    .modal-content button:hover {
         background-color: #2980b9;
         transform: scale(1.05);
     }
@@ -193,6 +200,25 @@
         text-decoration: underline;
     }
 
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        position: absolute;
+        top: 10px;
+        right: 15px;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #333;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
     @media (max-width: 480px) {
         .button-container {
             flex-direction: column;
@@ -200,39 +226,9 @@
         }
 
         .admin-btn {
-            margin-bottom: 10px;
             width: 100%;
+            max-width: none;
         }
-
-        .login-form {
-            padding: 20px;
-        }
-    }
-
-    #equipment-admin-passkey-form input[type="password"] {
-        width: 100%;
-        padding: 12px;
-        margin-bottom: 15px;
-        border: none;
-        border-radius: 25px;
-        background-color: #f0f0f0;
-    }
-
-    #equipment-admin-passkey-form button {
-        width: 100%;
-        padding: 12px;
-        background-color: #3498db;
-        color: white;
-        border: none;
-        border-radius: 25px;
-        cursor: pointer;
-        font-size: 1.1em;
-        transition: all 0.3s ease;
-    }
-
-    #equipment-admin-passkey-form button:hover {
-        background-color: #2980b9;
-        transform: scale(1.05);
     }
 </style>
 
@@ -241,6 +237,7 @@
         <button id="pg-student-admin-btn" class="admin-btn">PG Student Admin</button>
         <button id="admin-passkey-btn" class="admin-btn">Admin Access</button>
         <button id="equipment-admin-btn" class="admin-btn">Equipment Admin</button>
+        <button id="space-admin-btn" class="admin-btn">Space Admin</button>
     </div>
 
     <div class="login-form">
@@ -265,6 +262,7 @@
 
 <div id="admin-passkey-modal" class="modal">
     <div class="modal-content">
+        <span class="close">&times;</span>
         <h2>Enter Admin Passkey</h2>
         <form id="admin-passkey-form">
             <input type="password" id="admin-passkey" required>
@@ -275,6 +273,7 @@
 
 <div id="pg-student-admin-passkey-modal" class="modal">
     <div class="modal-content">
+        <span class="close">&times;</span>
         <h2>Enter PG Student Admin Passkey</h2>
         <form id="pg-student-admin-passkey-form">
             <input type="password" id="pg-student-admin-passkey" required>
@@ -283,9 +282,9 @@
     </div>
 </div>
 
-
 <div id="equipment-admin-passkey-modal" class="modal">
     <div class="modal-content">
+        <span class="close">&times;</span>
         <h2>Enter Equipment Admin Passkey</h2>
         <form id="equipment-admin-passkey-form">
             <input type="password" id="equipment-admin-passkey" required>
@@ -294,32 +293,26 @@
     </div>
 </div>
 
+<div id="space-admin-passkey-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Enter Space Admin Passkey</h2>
+        <form id="space-admin-passkey-form">
+            <input type="password" id="space-admin-passkey" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+
 <script>
-    // JavaScript to handle the modals
-    var equipmentAdminModal = document.getElementById("equipment-admin-passkey-modal");
-    var equipmentAdminBtn = document.getElementById("equipment-admin-btn");
-
-    equipmentAdminBtn.onclick = function() {
-        equipmentAdminModal.style.display = "block";
-    }
-
-    window.onclick = function(event) {
-        if (event.target == adminModal) {
-            adminModal.style.display = "none";
-        }
-        if (event.target == pgStudentAdminModal) {
-            pgStudentAdminModal.style.display = "none";
-        }
-        if (event.target == equipmentAdminModal) {
-            equipmentAdminModal.style.display = "none";
-        }
-    }
-
-
     var adminModal = document.getElementById("admin-passkey-modal");
     var adminBtn = document.getElementById("admin-passkey-btn");
     var pgStudentAdminModal = document.getElementById("pg-student-admin-passkey-modal");
     var pgStudentAdminBtn = document.getElementById("pg-student-admin-btn");
+    var equipmentAdminModal = document.getElementById("equipment-admin-passkey-modal");
+    var equipmentAdminBtn = document.getElementById("equipment-admin-btn");
+    var spaceAdminModal = document.getElementById("space-admin-passkey-modal");
+    var spaceAdminBtn = document.getElementById("space-admin-btn");
 
     adminBtn.onclick = function() {
         adminModal.style.display = "block";
@@ -329,12 +322,28 @@
         pgStudentAdminModal.style.display = "block";
     }
 
-    window.onclick = function(event) {
-        if (event.target == adminModal) {
-            adminModal.style.display = "none";
+    equipmentAdminBtn.onclick = function() {
+        equipmentAdminModal.style.display = "block";
+    }
+
+    spaceAdminBtn.onclick = function() {
+        spaceAdminModal.style.display = "block";
+    }
+
+    // Get all close buttons
+    var closeButtons = document.getElementsByClassName("close");
+
+    // Add click event to all close buttons
+    for (var i = 0; i < closeButtons.length; i++) {
+        closeButtons[i].onclick = function() {
+            var modal = this.closest('.modal');
+            modal.style.display = "none";
         }
-        if (event.target == pgStudentAdminModal) {
-            pgStudentAdminModal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = "none";
         }
     }
 
@@ -403,6 +412,31 @@
         .then(data => {
             if (data.valid) {
                 window.location.href = '/equipment_admin_register';
+            } else {
+                alert('Invalid passkey');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+
+    document.getElementById("space-admin-passkey-form").addEventListener('submit', function(e) {
+        e.preventDefault();
+        const passkey = document.getElementById('space-admin-passkey').value;
+
+        fetch('/check_space_admin_passkey', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `passkey=${encodeURIComponent(passkey)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.valid) {
+                window.location.href = '/space_admin_register';
             } else {
                 alert('Invalid passkey');
             }
