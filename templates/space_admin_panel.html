@@ -3,5 +3,27 @@
 <div class="container">
     <h1>Space Admin Panel</h1>
     
+    <h2>Upload Excel File</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".xlsx">
+        <button type="submit">Upload</button>
+    </form>
+    
+    <h2>Manual Data Entry</h2>
+    <form method="POST">
+        <input type="text" name="room_no" placeholder="Room No./Lab Name" required>
+        <input type="number" step="0.01" name="length" placeholder="Length (ft)" required>
+        <input type="number" step="0.01" name="breadth" placeholder="Breadth (ft)" required>
+        <input type="text" name="fac_incharge" placeholder="Fac-Incharge">
+        <input type="text" name="staff_incharge" placeholder="Staff-Incharge">
+        <input type="number" step="0.01" name="area_sq_ft" placeholder="Area (sq. ft.)" required>
+        <input type="number" step="0.01" name="area_sq_m" placeholder="Area (sq. m.)" required>
+        <input type="number" name="no_of_pg_students" placeholder="No. of PG students sitting">
+        <input type="text" name="comments" placeholder="Comments">
+        <input type="text" name="extra_column1" placeholder="Extra Column 1">
+        <input type="text" name="extra_column2" placeholder="Extra Column 2">
+        <button type="submit">Add Space</button>
+    </form>
 </div>
+<a href="{{ url_for('space_dashboard') }}" class="btn btn-info">Go to Dashboard</a>
 {% endblock %}

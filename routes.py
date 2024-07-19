@@ -2,7 +2,7 @@ from flask import render_template, url_for, flash, redirect, request, jsonify,se
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db
-from models import User, StudentData, Passkey,PGStudentAdminPasskey,PGStudentData, EquipmentAdminPasskey, Equipment, SpaceAdminPasskey
+from models import User, StudentData, Passkey, PGStudentAdminPasskey, PGStudentData, EquipmentAdminPasskey, Equipment, SpaceAdminPasskey, Space
 import pandas as pd
 import xlsxwriter
 from io import BytesIO
@@ -1008,15 +1008,76 @@ def space_admin_login():
     
     return render_template('space_admin_login.html')
 
-@app.route('/space_admin_panel')
+@app.route('/space_admin_panel', methods=['GET', 'POST'])
 @login_required
 def space_admin_panel():
     if current_user.role != 'space_admin':
         flash('You do not have permission to access this page', 'error')
-        return redirect(url_for('login'))
+        return redirect(url_for('home'))
+    
+    if request.method == 'POST':
+        if 'file' in request.files:
+            file = request.files['file']
+            if file and file.filename.endswith('.xlsx'):
+                df = pd.read_excel(file)
+                for _, row in df.iterrows():
+                    def safe_convert(value, type_func, default):
+                        try:
+                            return type_func(value) if pd.notna(value) else default
+                        except ValueError:
+                            return default
+
+                    space = Space(
+                        room_no=str(row['Room No./Lab Name']) if pd.notna(row['Room No./Lab Name']) else '',
+                        length=safe_convert(row['Length (ft)'], float, 0.0),
+                        breadth=safe_convert(row['Breadth (ft)'], float, 0.0),
+                        fac_incharge=str(row['Fac-Incharge']) if pd.notna(row['Fac-Incharge']) else '',
+                        staff_incharge=str(row['Staff-Incharge']) if pd.notna(row['Staff-Incharge']) else '',
+                        area_sq_ft=safe_convert(row['Area (sq. ft.)'], float, 0.0),
+                        area_sq_m=safe_convert(row['Area (sq. m.)'], float, 0.0),
+                        no_of_pg_students=safe_convert(row['No. of PG students sitting'], int, 0),
+                        comments=str(row['Comments']) if pd.notna(row['Comments']) else '',
+                        extra_column1='',
+                        extra_column2=''
+                    )
+                    db.session.add(space)
+                db.session.commit()
+                flash('Excel data uploaded successfully', 'success')
+            else:
+                flash('Invalid file format. Please upload an Excel file.', 'danger')
+        else:
+            # Manual data entry
+            space = Space(
+                room_no=request.form['room_no'],
+                length=float(request.form['length']) if request.form['length'] else 0.0,
+                breadth=float(request.form['breadth']) if request.form['breadth'] else 0.0,
+                fac_incharge=request.form['fac_incharge'],
+                staff_incharge=request.form['staff_incharge'],
+                area_sq_ft=float(request.form['area_sq_ft']) if request.form['area_sq_ft'] else 0.0,
+                area_sq_m=float(request.form['area_sq_m']) if request.form['area_sq_m'] else 0.0,
+                no_of_pg_students=int(request.form['no_of_pg_students']) if request.form['no_of_pg_students'].isdigit() else 0,
+                comments=request.form['comments'],
+                extra_column1=request.form['extra_column1'],
+                extra_column2=request.form['extra_column2']
+            )
+            db.session.add(space)
+            db.session.commit()
+            flash('Space data added successfully', 'success')
+        
+        return redirect(url_for('space_dashboard'))
     
     return render_template('space_admin_panel.html')
 
+
+@app.route('/space_dashboard')
+@login_required
+def space_dashboard():
+    if current_user.role not in ['space_admin', 'admin']:
+        flash('Access denied. You must be a Space Admin or Admin to view this page.', 'danger')
+        return redirect(url_for('home'))
+    
+    spaces = Space.query.all()
+    return render_template('space_dashboard.html', spaces=spaces)
 
 @app.route("/space_admin_forgot_password", methods=['GET', 'POST'])
 def space_admin_forgot_password():
@@ -1039,3 +1100,26 @@ def space_admin_forgot_password():
         else:
             flash('Space Admin username not found. Please check and try again.', 'danger')
     return render_template('space_admin_forgot_password.html', title='Space Admin Forgot Password')
+
+@app.route("/delete_space_data/<int:id>", methods=['POST'])
+@login_required
+def delete_space_data(id):
+    if current_user.role != 'space_admin':
+        flash('Access denied. You must be a Space Admin to delete space data.', 'danger')
+        return redirect(url_for('home'))
+    space_data = Space.query.get_or_404(id)
+    db.session.delete(space_data)
+    db.session.commit()
+    flash('Space data deleted successfully', 'success')
+    return redirect(url_for('space_dashboard'))
+
+@app.route("/delete_all_space_data", methods=['POST'])
+@login_required
+def delete_all_space_data():
+    if current_user.role != 'space_admin':
+        flash('Access denied. You must be a Space Admin to delete all space data.', 'danger')
+        return redirect(url_for('home'))
+    Space.query.delete()
+    db.session.commit()
+    flash('All space data deleted successfully', 'success')
+    return redirect(url_for('space_dashboard'))

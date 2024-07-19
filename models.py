@@ -66,3 +66,18 @@ class Equipment(db.Model):
     remarks = db.Column(db.String(200))
     extra_column1 = db.Column(db.String(100))
     extra_column2 = db.Column(db.String(100))
+
+
+class Space(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    room_no = db.Column(db.String(100), nullable=False)
+    length = db.Column(db.Float)
+    breadth = db.Column(db.Float)
+    fac_incharge = db.Column(db.String(100))
+    staff_incharge = db.Column(db.String(100))
+    area_sq_ft = db.Column(db.Float)
+    area_sq_m = db.Column(db.Float)
+    no_of_pg_students = db.Column(db.Integer)
+    comments = db.Column(db.String(200))
+    extra_column1 = db.Column(db.String(100))
+    extra_column2 = db.Column(db.String(100))
