@@ -155,12 +155,66 @@
     .column-visibility-content label:hover {
         background-color: #e8f6fd;
     }
+    .dashboard-links {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin: 2rem 0;
+        padding: 0 1rem;
+    }
+
+    .dashboard-btn {
+        background-color: #3498db;
+        color: #ffffff;
+        text-decoration: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .dashboard-btn:hover {
+        background-color: #2980b9;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-links {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .dashboard-btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
 </style>
 
 <div class="dashboard-container">
+    {% if current_user.role == 'student' %}
     <a href="{{ url_for('pg_student_dashboard') }}" class="dashboard-btn">PG Student Dashboard</a>
     <a href="{{ url_for('equipment_dashboard') }}" class="dashboard-btn">Equipment Dashboard</a>
     <a href="{{ url_for('space_dashboard') }}" class="dashboard-btn">Space Dashboard</a>
+    {% endif %}
     <h1>Student Dashboard</h1>
     <div class="control-panel">
         {% if current_user.role == 'admin' %}

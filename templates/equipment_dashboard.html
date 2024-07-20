@@ -122,10 +122,57 @@
     .action-buttons .btn {
         margin: 0 10px;
     }
+    .dashboard-links {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin: 2rem 0;
+        padding: 0 1rem;
+    }
+
+    .dashboard-btn {
+        background-color: #3498db;
+        color: #ffffff;
+        text-decoration: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .dashboard-btn:hover {
+        background-color: #2980b9;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-links {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .dashboard-btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
 </style>
 
 <div class="dashboard">
     <h1>Equipment Dashboard</h1>
+    {% if current_user.role == 'student' %}
+    <a href="{{ url_for('student_dashboard') }}" class="dashboard-btn">TA Dashboard</a>
+    <a href="{{ url_for('space_dashboard') }}" class="dashboard-btn">Space Dashboard</a>
+    <a href="{{ url_for('pg_student_dashboard') }}" class="dashboard-btn">PG Student Dashboard</a>
+    {% endif %}
 
     {% if current_user.role == 'equipment_admin' %}
     <div class="filter-section">
