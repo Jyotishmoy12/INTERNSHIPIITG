@@ -893,10 +893,13 @@ def equipment_dashboard():
     page = request.args.get('page', 1, type=int)
     equipment_data = query.paginate(page=page, per_page=10)
 
+    show_filters = current_user.role != 'admin'
+
     return render_template('equipment_dashboard.html', 
                            title='Equipment Dashboard', 
                            equipment_data=equipment_data,
-                           user_role=current_user.role)
+                           user_role=current_user.role,
+                           show_filters=show_filters)
 
 
 @app.route("/delete_all_equipment", methods=['POST'])
@@ -916,8 +919,8 @@ def delete_all_equipment():
 @app.route('/download_all_equipment_data')
 @login_required
 def download_all_equipment_data():
-    if current_user.role != 'space_admin':
-        flash('Access denied. You must be a Space Admin to download all equipment data.', 'danger')
+    if current_user.role not in ['equipment_admin', 'admin', 'pg_student_admin', 'space_admin']:
+        flash('Access denied. You must be an Equipment Admin, Admin, PG Student Admin, or Space Admin to download all equipment data.', 'danger')
         return redirect(url_for('home'))
 
     # Get all equipment data
@@ -1121,45 +1124,49 @@ def space_dashboard():
         flash('Access denied. You must be a Space Admin or Admin to view this page.', 'danger')
         return redirect(url_for('home'))
     
-    # Get filter parameters
-    search_query = request.args.get('search_query', '')
-    fac_incharge = request.args.get('fac_incharge', '')
-    staff_incharge = request.args.get('staff_incharge', '')
-    min_area = request.args.get('min_area', type=float)
-    max_area = request.args.get('max_area', type=float)
-    min_pg_students = request.args.get('min_pg_students', type=int)
-    max_pg_students = request.args.get('max_pg_students', type=int)
-
     # Base query
     query = Space.query
 
-    # Apply filters
-    if search_query:
-        query = query.filter(
-            (Space.room_no.ilike(f'%{search_query}%')) |
-            (Space.fac_incharge.ilike(f'%{search_query}%')) |
-            (Space.staff_incharge.ilike(f'%{search_query}%')) |
-            (Space.comments.ilike(f'%{search_query}%'))
-        )
-    if fac_incharge:
-        query = query.filter(Space.fac_incharge == fac_incharge)
-    if staff_incharge:
-        query = query.filter(Space.staff_incharge == staff_incharge)
-    if min_area is not None:
-        query = query.filter(Space.area_sq_ft >= min_area)
-    if max_area is not None:
-        query = query.filter(Space.area_sq_ft <= max_area)
-    if min_pg_students is not None:
-        query = query.filter(Space.no_of_pg_students >= min_pg_students)
-    if max_pg_students is not None:
-        query = query.filter(Space.no_of_pg_students <= max_pg_students)
+    # Apply filters only for space_admin
+    if current_user.role == 'space_admin':
+        search_query = request.args.get('search_query', '')
+        fac_incharge = request.args.get('fac_incharge', '')
+        staff_incharge = request.args.get('staff_incharge', '')
+        min_area = request.args.get('min_area', type=float)
+        max_area = request.args.get('max_area', type=float)
+        min_pg_students = request.args.get('min_pg_students', type=int)
+        max_pg_students = request.args.get('max_pg_students', type=int)
+
+        if search_query:
+            query = query.filter(
+                (Space.room_no.ilike(f'%{search_query}%')) |
+                (Space.fac_incharge.ilike(f'%{search_query}%')) |
+                (Space.staff_incharge.ilike(f'%{search_query}%')) |
+                (Space.comments.ilike(f'%{search_query}%'))
+            )
+        if fac_incharge:
+            query = query.filter(Space.fac_incharge == fac_incharge)
+        if staff_incharge:
+            query = query.filter(Space.staff_incharge == staff_incharge)
+        if min_area is not None:
+            query = query.filter(Space.area_sq_ft >= min_area)
+        if max_area is not None:
+            query = query.filter(Space.area_sq_ft <= max_area)
+        if min_pg_students is not None:
+            query = query.filter(Space.no_of_pg_students >= min_pg_students)
+        if max_pg_students is not None:
+            query = query.filter(Space.no_of_pg_students <= max_pg_students)
+
+        # Get unique values for dropdowns
+        fac_incharge_options = db.session.query(Space.fac_incharge.distinct()).all()
+        staff_incharge_options = db.session.query(Space.staff_incharge.distinct()).all()
+    else:
+        # For admin, no filtering
+        search_query = fac_incharge = staff_incharge = min_area = max_area = min_pg_students = max_pg_students = None
+        fac_incharge_options = staff_incharge_options = []
 
     # Execute query
     spaces = query.all()
-
-    # Get unique values for dropdowns
-    fac_incharge_options = db.session.query(Space.fac_incharge.distinct()).all()
-    staff_incharge_options = db.session.query(Space.staff_incharge.distinct()).all()
 
     return render_template('space_dashboard.html', 
                            spaces=spaces, 
@@ -1173,7 +1180,46 @@ def space_dashboard():
                            min_pg_students=min_pg_students,
                            max_pg_students=max_pg_students)
 
+@app.route('/download_all_space_data')
+@login_required
+def download_all_space_data():
+    if current_user.role != 'admin':
+        flash('Access denied. You must be an Admin to download all space data.', 'danger')
+        return redirect(url_for('home'))
 
+    spaces = Space.query.all()
+    
+    output = io.BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet()
+
+    # Write header
+    headers = ['Room No./Lab Name', 'Length (ft)', 'Breadth (ft)', 'Fac-Incharge', 'Staff-Incharge', 
+               'Area (sq. ft.)', 'Area (sq. m.)', 'No. of PG students', 'Comments', 'Extra Column 1', 'Extra Column 2']
+    for col, header in enumerate(headers):
+        worksheet.write(0, col, header)
+
+    # Write data
+    for row, space in enumerate(spaces, start=1):
+        worksheet.write(row, 0, space.room_no)
+        worksheet.write(row, 1, space.length)
+        worksheet.write(row, 2, space.breadth)
+        worksheet.write(row, 3, space.fac_incharge)
+        worksheet.write(row, 4, space.staff_incharge)
+        worksheet.write(row, 5, space.area_sq_ft)
+        worksheet.write(row, 6, space.area_sq_m)
+        worksheet.write(row, 7, space.no_of_pg_students)
+        worksheet.write(row, 8, space.comments)
+        worksheet.write(row, 9, space.extra_column1)
+        worksheet.write(row, 10, space.extra_column2)
+
+    workbook.close()
+    output.seek(0)
+
+    return send_file(output, 
+                     download_name='all_space_data.xlsx',
+                     as_attachment=True,
+                     mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 @app.route('/download_filtered_space_data')
 @login_required
 def download_filtered_space_data():
