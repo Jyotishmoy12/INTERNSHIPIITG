@@ -1120,8 +1120,8 @@ def space_admin_panel():
 @app.route('/space_dashboard', methods=['GET'])
 @login_required
 def space_dashboard():
-    if current_user.role not in ['space_admin', 'admin']:
-        flash('Access denied. You must be a Space Admin or Admin to view this page.', 'danger')
+    if current_user.role not in ['space_admin', 'admin' , 'pg_student_admin', 'equipment_admin']:
+        flash('Access denied. You must be a Space Admin Admin or Pg student admin to view this page.', 'danger')
         return redirect(url_for('home'))
     
     # Base query
@@ -1183,7 +1183,7 @@ def space_dashboard():
 @app.route('/download_all_space_data')
 @login_required
 def download_all_space_data():
-    if current_user.role != 'admin':
+    if current_user.role not in ['admin' , 'pg_student_admin', 'equipment_admin']:
         flash('Access denied. You must be an Admin to download all space data.', 'danger')
         return redirect(url_for('home'))
 

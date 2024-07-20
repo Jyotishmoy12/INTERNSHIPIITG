@@ -214,7 +214,7 @@
 
     <!-- Download and Admin Panel Buttons -->
     <div class="action-buttons">
-        {% if current_user.role == 'space_admin' or current_user.role == 'admin' %}
+        {% if current_user.role == 'space_admin' or current_user.role == 'admin' or current_user.role == 'pg_student_admin' %}
         <a href="{{ url_for('download_all_equipment_data') }}" class="btn btn-success">Download All Equipment Data (Excel)</a>
         {% elif current_user.role == 'equipment_admin' %}
         <a href="{{ url_for('download_filtered_equipment_data', search_query=search_query, status_filter=status_filter) }}" class="btn btn-success">Download Filtered Data (Excel)</a>
