@@ -289,20 +289,33 @@ def upload_excel():
     if file.filename == '':
         flash('No selected file', 'danger')
         return redirect(url_for('admin_panel'))
-    if file:
-        df = pd.read_excel(file)
-        df.dropna(how='any', inplace=True)
-        for _, row in df.iterrows():
-            student_data = StudentData(
-                student_name=row['Names'],
-                subject=row['Subject'],
-                subject_type=row['Type'],
-                subject_name=row['Subject Name'],
-                instructor=row['Instructor']
-            )
-            db.session.add(student_data)
-        db.session.commit()
-        flash('Excel data uploaded successfully', 'success')
+    if file and file.filename.endswith('.xlsx'):
+        try:
+            df = pd.read_excel(file)
+            required_columns = ['Names', 'Subject', 'Type', 'Subject Name', 'Instructor']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            if missing_columns:
+                flash(f'Missing columns: {", ".join(missing_columns)}', 'danger')
+                return redirect(url_for('admin_panel'))
+            
+            df.dropna(how='any', inplace=True)
+            for _, row in df.iterrows():
+                student_data = StudentData(
+                    student_name=str(row['Names']),
+                    subject=str(row['Subject']),
+                    subject_type=str(row['Type']),
+                    subject_name=str(row['Subject Name']),
+                    instructor=str(row['Instructor']),
+                    extra_column1=str(row.get('Extra Column 1', '')),
+                    extra_column2=str(row.get('Extra Column 2', ''))
+                )
+                db.session.add(student_data)
+            db.session.commit()
+            flash('Excel data uploaded successfully', 'success')
+        except Exception as e:
+            flash(f'Error uploading data: {str(e)}', 'danger')
+    else:
+        flash('Invalid file format. Please upload an Excel file.', 'danger')
     return redirect(url_for('student_dashboard'))
 
 @app.route("/add_student_data", methods=['POST'])
@@ -409,48 +422,58 @@ def pg_student_admin_panel():
         if 'file' in request.files:
             file = request.files['file']
             if file and file.filename.endswith('.xlsx'):
-                df = pd.read_excel(file)
-                for _, row in df.iterrows():
-                    pg_student_data = PGStudentData(
-                        student_name=row.get('Names', ''),
-                        programme=row.get('Programme', ''),
-                        comprehensive_exam_date=row.get('Comprehensive Exam Date', ''),
-                        soas_date=row.get('SOAS Date', ''),
-                        synopsis_date=row.get('Synopsis Date', ''),
-                        defense_date=row.get('Defense Date', ''),
-                        thesis_title=row.get('Thesis Title', ''),
-                        supervisor=row.get('Supervisor', ''),
-                        co_supervisor=row.get('Co-Supervisor', ''),
-                        extra_column1='',
-                        extra_column2=''
-                    )
-                    db.session.add(pg_student_data)
-                db.session.commit()
-                flash('Excel data uploaded successfully', 'success')
-                return redirect(url_for('pg_student_dashboard'))
+                try:
+                    df = pd.read_excel(file)
+                    required_columns = ['Names', 'Programme', 'Comprehensive Exam Date', 'SOAS Date', 'Synopsis Date', 'Defense Date', 'Thesis Title', 'Supervisor', 'Co-Supervisor']
+                    missing_columns = [col for col in required_columns if col not in df.columns]
+                    if missing_columns:
+                        flash(f'Missing columns: {", ".join(missing_columns)}', 'danger')
+                        return redirect(url_for('pg_student_admin_panel'))
+                    
+                    for _, row in df.iterrows():
+                        pg_student_data = PGStudentData(
+                            student_name=str(row['Names']),
+                            programme=str(row['Programme']),
+                            comprehensive_exam_date=pd.to_datetime(row['Comprehensive Exam Date']).date() if pd.notna(row['Comprehensive Exam Date']) else None,
+                            soas_date=pd.to_datetime(row['SOAS Date']).date() if pd.notna(row['SOAS Date']) else None,
+                            synopsis_date=pd.to_datetime(row['Synopsis Date']).date() if pd.notna(row['Synopsis Date']) else None,
+                            defense_date=pd.to_datetime(row['Defense Date']).date() if pd.notna(row['Defense Date']) else None,
+                            thesis_title=str(row['Thesis Title']),
+                            supervisor=str(row['Supervisor']),
+                            co_supervisor=str(row['Co-Supervisor']),
+                            extra_column1=str(row.get('Extra Column 1', '')),
+                            extra_column2=str(row.get('Extra Column 2', ''))
+                        )
+                        db.session.add(pg_student_data)
+                    db.session.commit()
+                    flash('Excel data uploaded successfully', 'success')
+                except Exception as e:
+                    flash(f'Error uploading data: {str(e)}', 'danger')
             else:
                 flash('Invalid file format. Please upload an Excel file.', 'danger')
         else:
             # Manual data entry
-            pg_student_data = PGStudentData(
-                student_name=request.form['student_name'],
-                programme=request.form['programme'],
-                comprehensive_exam_date=request.form['comprehensive_exam_date'],
-                soas_date=request.form['soas_date'],
-                synopsis_date=request.form['synopsis_date'],
-                defense_date=request.form['defense_date'],
-                thesis_title=request.form['thesis_title'],
-                supervisor=request.form['supervisor'],
-                co_supervisor=request.form['co_supervisor'],
-                extra_column1=request.form['extra_column1'],
-                extra_column2=request.form['extra_column2']
-            )
-            db.session.add(pg_student_data)
-            db.session.commit()
-            flash('PG Student data added successfully', 'success')
-            return redirect(url_for('pg_student_dashboard'))
+            try:
+                pg_student_data = PGStudentData(
+                    student_name=request.form['student_name'],
+                    programme=request.form['programme'],
+                    comprehensive_exam_date=datetime.strptime(request.form['comprehensive_exam_date'], '%Y-%m-%d').date() if request.form['comprehensive_exam_date'] else None,
+                    soas_date=datetime.strptime(request.form['soas_date'], '%Y-%m-%d').date() if request.form['soas_date'] else None,
+                    synopsis_date=datetime.strptime(request.form['synopsis_date'], '%Y-%m-%d').date() if request.form['synopsis_date'] else None,
+                    defense_date=datetime.strptime(request.form['defense_date'], '%Y-%m-%d').date() if request.form['defense_date'] else None,
+                    thesis_title=request.form['thesis_title'],
+                    supervisor=request.form['supervisor'],
+                    co_supervisor=request.form['co_supervisor'],
+                    extra_column1=request.form['extra_column1'],
+                    extra_column2=request.form['extra_column2']
+                )
+                db.session.add(pg_student_data)
+                db.session.commit()
+                flash('PG Student data added successfully', 'success')
+            except Exception as e:
+                flash(f'Error adding PG student data: {str(e)}', 'danger')
 
-    return render_template('pg_student_admin_panel.html', title='PG Student Admin Panel')
+    return redirect(url_for('pg_student_dashboard'))
 
 @app.route("/pg_student_dashboard", methods=['GET', 'POST'])
 @login_required
@@ -786,47 +809,59 @@ def equipment_admin_panel():
         if 'file' in request.files:
             file = request.files['file']
             if file and file.filename.endswith('.xlsx'):
-                df = pd.read_excel(file)
-                for _, row in df.iterrows():
-                    equipment = Equipment(
-                        sl_no=str(row.get('Sl No', '')),
-                        description=str(row.get('Description of Item', '')),
-                        po_no_date=str(row.get('P.O. No.with Date', '')),
-                        quantity=str(row.get('Qty.', '')),
-                        price=str(row.get('Price mentioned in the Asset Register', '')),
-                        location=str(row.get('Location', '')),
-                        dept_stock_register_no=str(row.get('Dept. Stock Register No.', '')),
-                        status=str(row.get('Status', '')),
-                        remarks=str(row.get('Remarks', '')),
-                        extra_column1='',
-                        extra_column2=''
-                    )
-                    db.session.add(equipment)
-                db.session.commit()
-                flash('Excel data uploaded successfully', 'success')
+                try:
+                    df = pd.read_excel(file)
+                    required_columns = ['Description', 'P.O. No.with Date', 'Qty.', 'Price', 'Location', 'Dept. Stock Register No.', 'Status', 'Remarks']
+                    missing_columns = [col for col in required_columns if col not in df.columns]
+                    if missing_columns:
+                        flash(f'Missing columns: {", ".join(missing_columns)}', 'danger')
+                        return redirect(url_for('equipment_admin_panel'))
+                    
+                    for _, row in df.iterrows():
+                        equipment = Equipment(
+                            sl_no=str(row.get('Sl No', '')),
+                            description=str(row['Description']),
+                            po_no_date=str(row['P.O. No.with Date']),
+                            quantity=str(row['Qty.']),
+                            price=str(row['Price']),
+                            location=str(row['Location']),
+                            dept_stock_register_no=str(row['Dept. Stock Register No.']),
+                            status=str(row['Status']),
+                            remarks=str(row['Remarks']),
+                            extra_column1=str(row.get('Extra Column 1', '')),
+                            extra_column2=str(row.get('Extra Column 2', ''))
+                        )
+                        db.session.add(equipment)
+                    db.session.commit()
+                    flash('Excel data uploaded successfully', 'success')
+                except Exception as e:
+                    flash(f'Error uploading data: {str(e)}', 'danger')
             else:
                 flash('Invalid file format. Please upload an Excel file.', 'danger')
         else:
             # Manual data entry
-            equipment = Equipment(
-                # sl_no=request.form['sl_no'],
-                description=request.form['description'],
-                po_no_date=request.form['po_no_date'],
-                quantity=request.form['quantity'],
-                price=request.form['price'],
-                location=request.form['location'],
-                dept_stock_register_no=request.form['dept_stock_register_no'],
-                status=request.form['status'],
-                remarks=request.form['remarks'],
-                extra_column1=request.form['extra_column1'],
-                extra_column2=request.form['extra_column2']
-            )
-            db.session.add(equipment)
-            db.session.commit()
-            flash('Equipment data added successfully', 'success')
+            try:
+                equipment = Equipment(
+                    description=request.form['description'],
+                    po_no_date=request.form['po_no_date'],
+                    quantity=request.form['quantity'],
+                    price=request.form['price'],
+                    location=request.form['location'],
+                    dept_stock_register_no=request.form['dept_stock_register_no'],
+                    status=request.form['status'],
+                    remarks=request.form['remarks'],
+                    extra_column1=request.form['extra_column1'],
+                    extra_column2=request.form['extra_column2']
+                )
+                db.session.add(equipment)
+                db.session.commit()
+                flash('Equipment data added successfully', 'success')
+            except Exception as e:
+                flash(f'Error adding equipment data: {str(e)}', 'danger')
 
     equipment_data = Equipment.query.all()
     return render_template('equipment_admin_panel.html', title='Equipment Admin Panel', equipment_data=equipment_data)
+
 
 @app.route("/equipment_admin_forgot_password", methods=['GET', 'POST'])
 def equipment_admin_forgot_password():
@@ -1067,53 +1102,63 @@ def space_admin_panel():
         if 'file' in request.files:
             file = request.files['file']
             if file and file.filename.endswith('.xlsx'):
-                df = pd.read_excel(file)
-                for _, row in df.iterrows():
-                    def safe_convert(value, type_func, default):
-                        try:
-                            return type_func(value) if pd.notna(value) else default
-                        except ValueError:
-                            return default
+                try:
+                    df = pd.read_excel(file)
+                    required_columns = ['Room No./Lab Name', 'Length (ft)', 'Breadth (ft)', 'Fac-Incharge', 'Staff-Incharge', 'Area (sq. ft.)', 'Area (sq. m.)', 'No. of PG students sitting', 'Comments']
+                    missing_columns = [col for col in required_columns if col not in df.columns]
+                    if missing_columns:
+                        flash(f'Missing columns: {", ".join(missing_columns)}', 'danger')
+                        return redirect(url_for('space_admin_panel'))
+                    
+                    for _, row in df.iterrows():
+                        def safe_convert(value, type_func, default):
+                            try:
+                                return type_func(value) if pd.notna(value) else default
+                            except ValueError:
+                                return default
 
-                    space = Space(
-                        room_no=str(row['Room No./Lab Name']) if pd.notna(row['Room No./Lab Name']) else '',
-                        length=safe_convert(row['Length (ft)'], float, 0.0),
-                        breadth=safe_convert(row['Breadth (ft)'], float, 0.0),
-                        fac_incharge=str(row['Fac-Incharge']) if pd.notna(row['Fac-Incharge']) else '',
-                        staff_incharge=str(row['Staff-Incharge']) if pd.notna(row['Staff-Incharge']) else '',
-                        area_sq_ft=safe_convert(row['Area (sq. ft.)'], float, 0.0),
-                        area_sq_m=safe_convert(row['Area (sq. m.)'], float, 0.0),
-                        no_of_pg_students=safe_convert(row['No. of PG students sitting'], int, 0),
-                        comments=str(row['Comments']) if pd.notna(row['Comments']) else '',
-                        extra_column1='',
-                        extra_column2=''
-                    )
-                    db.session.add(space)
-                db.session.commit()
-                flash('Excel data uploaded successfully', 'success')
+                        space = Space(
+                            room_no=str(row['Room No./Lab Name']),
+                            length=safe_convert(row['Length (ft)'], float, 0.0),
+                            breadth=safe_convert(row['Breadth (ft)'], float, 0.0),
+                            fac_incharge=str(row['Fac-Incharge']),
+                            staff_incharge=str(row['Staff-Incharge']),
+                            area_sq_ft=safe_convert(row['Area (sq. ft.)'], float, 0.0),
+                            area_sq_m=safe_convert(row['Area (sq. m.)'], float, 0.0),
+                            no_of_pg_students=safe_convert(row['No. of PG students sitting'], int, 0),
+                            comments=str(row['Comments']),
+                            extra_column1=str(row.get('Extra Column 1', '')),
+                            extra_column2=str(row.get('Extra Column 2', ''))
+                        )
+                        db.session.add(space)
+                    db.session.commit()
+                    flash('Excel data uploaded successfully', 'success')
+                except Exception as e:
+                    flash(f'Error uploading data: {str(e)}', 'danger')
             else:
                 flash('Invalid file format. Please upload an Excel file.', 'danger')
         else:
             # Manual data entry
-            space = Space(
-                room_no=request.form['room_no'],
-                length=float(request.form['length']) if request.form['length'] else 0.0,
-                breadth=float(request.form['breadth']) if request.form['breadth'] else 0.0,
-                fac_incharge=request.form['fac_incharge'],
-                staff_incharge=request.form['staff_incharge'],
-                area_sq_ft=float(request.form['area_sq_ft']) if request.form['area_sq_ft'] else 0.0,
-                area_sq_m=float(request.form['area_sq_m']) if request.form['area_sq_m'] else 0.0,
-                no_of_pg_students=int(request.form['no_of_pg_students']) if request.form['no_of_pg_students'].isdigit() else 0,
-                comments=request.form['comments'],
-                extra_column1=request.form['extra_column1'],
-                extra_column2=request.form['extra_column2']
-            )
-            db.session.add(space)
-            db.session.commit()
-            flash('Space data added successfully', 'success')
+            try:
+                space = Space(
+                    room_no=request.form['room_no'],
+                    length=float(request.form['length']) if request.form['length'] else 0.0,
+                    breadth=float(request.form['breadth']) if request.form['breadth'] else 0.0,
+                    fac_incharge=request.form['fac_incharge'],
+                    staff_incharge=request.form['staff_incharge'],
+                    area_sq_ft=float(request.form['area_sq_ft']) if request.form['area_sq_ft'] else 0.0,
+                    area_sq_m=float(request.form['area_sq_m']) if request.form['area_sq_m'] else 0.0,
+                    no_of_pg_students=int(request.form['no_of_pg_students']) if request.form['no_of_pg_students'].isdigit() else 0,
+                    comments=request.form['comments'],
+                    extra_column1=request.form['extra_column1'],
+                    extra_column2=request.form['extra_column2']
+                )
+                db.session.add(space)
+                db.session.commit()
+                flash('Space data added successfully', 'success')
+            except Exception as e:
+                flash(f'Error adding space data: {str(e)}', 'danger')
         
-        return redirect(url_for('space_dashboard'))
-    
     return render_template('space_admin_panel.html')
 
 
