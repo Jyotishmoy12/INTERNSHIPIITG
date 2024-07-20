@@ -69,8 +69,8 @@ def forgot_password():
 @app.route("/student_dashboard")
 @login_required
 def student_dashboard():
-    if current_user.role not in ['student', 'admin', 'pg_student_admin', 'equipment_admin']:
-        flash('Access denied. You must be a student, admin, PG student admin, or equipment admin to view this page.', 'danger')
+    if current_user.role not in ['student', 'admin', 'pg_student_admin', 'equipment_admin', 'space_admin']:
+        flash('Access denied. You must be a student, admin, PG student admin, equipment admin or space admin to view this page.', 'danger')
         return redirect(url_for('home'))
 
     if current_user.role in ['admin', 'equipment_admin']:
@@ -94,8 +94,8 @@ def student_dashboard():
 @app.route("/download_all_student_data")
 @login_required
 def download_all_student_data():
-    if current_user.role not in ['admin', 'pg_student_admin', 'equipment_admin']:
-        flash('Access denied. You must be an Admin, PG Student Admin, or Equipment Admin to download all data.', 'danger')
+    if current_user.role not in ['admin', 'pg_student_admin', 'equipment_admin', 'space_admin']:
+        flash('Access denied. You must be an Admin, PG Student Admin, Equipment Admin, or Space Admin to download all data.', 'danger')
         return redirect(url_for('home'))
 
     student_data = StudentData.query.all()
@@ -131,7 +131,7 @@ def download_all_student_data():
 @app.route("/download_all_data")
 @login_required
 def download_all_data():
-    if current_user.role not in ['admin', 'pg_student_admin']:
+    if current_user.role not in ['admin', 'pg_student_admin', 'space_admin']:
         flash('Access denied. You must be an admin or PG Student Admin to download data.', 'danger')
         return redirect(url_for('home'))
 
@@ -455,11 +455,11 @@ def pg_student_admin_panel():
 @app.route("/pg_student_dashboard", methods=['GET', 'POST'])
 @login_required
 def pg_student_dashboard():
-    if current_user.role not in ['pg_student_admin', 'admin', 'equipment_admin']:
-        flash('Access denied. You must be a PG Student Admin, Admin, or Equipment Admin to view this page.', 'danger')
+    if current_user.role not in ['pg_student_admin', 'admin', 'equipment_admin', 'space_admin']:
+        flash('Access denied. You must be a PG Student Admin, Admin, Equipment Admin or space admin to view this page.', 'danger')
         return redirect(url_for('home'))
 
-    if current_user.role in ['admin', 'equipment_admin']:
+    if current_user.role in ['admin', 'equipment_admin', 'space_admin']:
         # For admin and equipment_admin, fetch all data without filtering
         pg_student_data = PGStudentData.query.all()
         programmes = db.session.query(PGStudentData.programme).distinct().all()
@@ -529,8 +529,8 @@ def pg_student_dashboard():
 @app.route("/download_all_pg_data")
 @login_required
 def download_all_pg_data():
-    if current_user.role not in ['admin', 'pg_student_admin', 'equipment_admin']:
-        flash('Access denied. You must be an Admin, PG Student Admin, or Equipment Admin to download all data.', 'danger')
+    if current_user.role not in ['admin', 'pg_student_admin', 'equipment_admin', 'space_admin']:
+        flash('Access denied. You must be an Admin, PG Student Admin, Equipment Admin or space admin to download all data.', 'danger')
         return redirect(url_for('home'))
 
     pg_student_data = PGStudentData.query.all()
@@ -882,20 +882,21 @@ def delete_equipment(id):
     return redirect(url_for('equipment_dashboard'))
 
 
-
 @app.route("/equipment_dashboard")
 @login_required
 def equipment_dashboard():
-    if current_user.role not in ['equipment_admin', 'admin']:
-        flash('Access denied. You must be an Equipment Admin or Admin to view this page.', 'danger')
+    if current_user.role not in ['equipment_admin', 'admin', 'pg_student_admin', 'space_admin']:
+        flash('Access denied. You must be an Equipment Admin, Admin, PG Student Admin, or Space Admin to view this page.', 'danger')
         return redirect(url_for('home'))
+    
     query = Equipment.query
     page = request.args.get('page', 1, type=int)
     equipment_data = query.paginate(page=page, per_page=10)
 
     return render_template('equipment_dashboard.html', 
                            title='Equipment Dashboard', 
-                           equipment_data=equipment_data)
+                           equipment_data=equipment_data,
+                           user_role=current_user.role)
 
 
 @app.route("/delete_all_equipment", methods=['POST'])
@@ -910,6 +911,50 @@ def delete_all_equipment():
     flash('All equipment data has been deleted successfully', 'success')
     return redirect(url_for('equipment_admin_panel'))
 
+
+
+@app.route('/download_all_equipment_data')
+@login_required
+def download_all_equipment_data():
+    if current_user.role != 'space_admin':
+        flash('Access denied. You must be a Space Admin to download all equipment data.', 'danger')
+        return redirect(url_for('home'))
+
+    # Get all equipment data
+    all_data = Equipment.query.all()
+
+    # Create Excel file
+    output = io.BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet()
+
+    # Write headers
+    headers = ['Description', 'P.O. No. with Date', 'Qty.', 'Price', 'Location', 'Dept. Stock Register No.', 'Status', 'Remarks', 'Extra Column 1', 'Extra Column 2']
+    for col, header in enumerate(headers):
+        worksheet.write(0, col, header)
+
+    # Write data
+    for row, equipment in enumerate(all_data, start=1):
+        worksheet.write(row, 0, equipment.description)
+        worksheet.write(row, 1, equipment.po_no_date)
+        worksheet.write(row, 2, equipment.quantity)
+        worksheet.write(row, 3, equipment.price)
+        worksheet.write(row, 4, equipment.location)
+        worksheet.write(row, 5, equipment.dept_stock_register_no)
+        worksheet.write(row, 6, equipment.status)
+        worksheet.write(row, 7, equipment.remarks)
+        worksheet.write(row, 8, equipment.extra_column1)
+        worksheet.write(row, 9, equipment.extra_column2)
+
+    workbook.close()
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='all_equipment_data.xlsx'
+    )
 
 @app.route('/download_filtered_equipment_data')
 def download_filtered_equipment_data():
@@ -1069,15 +1114,141 @@ def space_admin_panel():
     return render_template('space_admin_panel.html')
 
 
-@app.route('/space_dashboard')
+@app.route('/space_dashboard', methods=['GET'])
 @login_required
 def space_dashboard():
     if current_user.role not in ['space_admin', 'admin']:
         flash('Access denied. You must be a Space Admin or Admin to view this page.', 'danger')
         return redirect(url_for('home'))
     
-    spaces = Space.query.all()
-    return render_template('space_dashboard.html', spaces=spaces)
+    # Get filter parameters
+    search_query = request.args.get('search_query', '')
+    fac_incharge = request.args.get('fac_incharge', '')
+    staff_incharge = request.args.get('staff_incharge', '')
+    min_area = request.args.get('min_area', type=float)
+    max_area = request.args.get('max_area', type=float)
+    min_pg_students = request.args.get('min_pg_students', type=int)
+    max_pg_students = request.args.get('max_pg_students', type=int)
+
+    # Base query
+    query = Space.query
+
+    # Apply filters
+    if search_query:
+        query = query.filter(
+            (Space.room_no.ilike(f'%{search_query}%')) |
+            (Space.fac_incharge.ilike(f'%{search_query}%')) |
+            (Space.staff_incharge.ilike(f'%{search_query}%')) |
+            (Space.comments.ilike(f'%{search_query}%'))
+        )
+    if fac_incharge:
+        query = query.filter(Space.fac_incharge == fac_incharge)
+    if staff_incharge:
+        query = query.filter(Space.staff_incharge == staff_incharge)
+    if min_area is not None:
+        query = query.filter(Space.area_sq_ft >= min_area)
+    if max_area is not None:
+        query = query.filter(Space.area_sq_ft <= max_area)
+    if min_pg_students is not None:
+        query = query.filter(Space.no_of_pg_students >= min_pg_students)
+    if max_pg_students is not None:
+        query = query.filter(Space.no_of_pg_students <= max_pg_students)
+
+    # Execute query
+    spaces = query.all()
+
+    # Get unique values for dropdowns
+    fac_incharge_options = db.session.query(Space.fac_incharge.distinct()).all()
+    staff_incharge_options = db.session.query(Space.staff_incharge.distinct()).all()
+
+    return render_template('space_dashboard.html', 
+                           spaces=spaces, 
+                           fac_incharge_options=fac_incharge_options,
+                           staff_incharge_options=staff_incharge_options,
+                           search_query=search_query,
+                           fac_incharge=fac_incharge,
+                           staff_incharge=staff_incharge,
+                           min_area=min_area,
+                           max_area=max_area,
+                           min_pg_students=min_pg_students,
+                           max_pg_students=max_pg_students)
+
+
+@app.route('/download_filtered_space_data')
+@login_required
+def download_filtered_space_data():
+    if current_user.role not in ['space_admin', 'admin']:
+        flash('Access denied. You must be a Space Admin or Admin to download data.', 'danger')
+        return redirect(url_for('home'))
+
+    # Get filter parameters (same as in space_dashboard route)
+    search_query = request.args.get('search_query', '')
+    fac_incharge = request.args.get('fac_incharge', '')
+    staff_incharge = request.args.get('staff_incharge', '')
+    min_area = request.args.get('min_area', type=float)
+    max_area = request.args.get('max_area', type=float)
+    min_pg_students = request.args.get('min_pg_students', type=int)
+    max_pg_students = request.args.get('max_pg_students', type=int)
+
+    # Apply filters (same logic as in space_dashboard route)
+    query = Space.query
+    if search_query:
+        query = query.filter(
+            (Space.room_no.ilike(f'%{search_query}%')) |
+            (Space.fac_incharge.ilike(f'%{search_query}%')) |
+            (Space.staff_incharge.ilike(f'%{search_query}%')) |
+            (Space.comments.ilike(f'%{search_query}%'))
+        )
+    if fac_incharge:
+        query = query.filter(Space.fac_incharge == fac_incharge)
+    if staff_incharge:
+        query = query.filter(Space.staff_incharge == staff_incharge)
+    if min_area is not None:
+        query = query.filter(Space.area_sq_ft >= min_area)
+    if max_area is not None:
+        query = query.filter(Space.area_sq_ft <= max_area)
+    if min_pg_students is not None:
+        query = query.filter(Space.no_of_pg_students >= min_pg_students)
+    if max_pg_students is not None:
+        query = query.filter(Space.no_of_pg_students <= max_pg_students)
+
+    # Get filtered data
+    spaces = query.all()
+
+    # Create Excel file
+    output = io.BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet()
+
+    # Write headers
+    headers = ['Room No./Lab Name', 'Length (ft)', 'Breadth (ft)', 'Fac-Incharge', 'Staff-Incharge', 
+               'Area (sq. ft.)', 'Area (sq. m.)', 'No. of PG students', 'Comments', 'Extra Column 1', 'Extra Column 2']
+    for col, header in enumerate(headers):
+        worksheet.write(0, col, header)
+
+    # Write data
+    for row, space in enumerate(spaces, start=1):
+        worksheet.write(row, 0, space.room_no)
+        worksheet.write(row, 1, space.length)
+        worksheet.write(row, 2, space.breadth)
+        worksheet.write(row, 3, space.fac_incharge)
+        worksheet.write(row, 4, space.staff_incharge)
+        worksheet.write(row, 5, space.area_sq_ft)
+        worksheet.write(row, 6, space.area_sq_m)
+        worksheet.write(row, 7, space.no_of_pg_students)
+        worksheet.write(row, 8, space.comments)
+        worksheet.write(row, 9, space.extra_column1)
+        worksheet.write(row, 10, space.extra_column2)
+
+    workbook.close()
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='filtered_space_data.xlsx'
+    )
 
 @app.route("/space_admin_forgot_password", methods=['GET', 'POST'])
 def space_admin_forgot_password():
@@ -1123,3 +1294,22 @@ def delete_all_space_data():
     db.session.commit()
     flash('All space data deleted successfully', 'success')
     return redirect(url_for('space_dashboard'))
+
+@app.route("/set_space_admin_passkey", methods=['POST'])
+@login_required
+def set_space_admin_passkey():
+    if current_user.role != 'space_admin':
+        flash('Access denied. You must be a Space Admin to set a new passkey.', 'danger')
+        return redirect(url_for('home'))
+    
+    new_passkey = request.form['new_passkey']
+    passkey = SpaceAdminPasskey.query.first()
+    if passkey:
+        passkey.passkey = new_passkey
+    else:
+        passkey = SpaceAdminPasskey(passkey=new_passkey)
+        db.session.add(passkey)
+    db.session.commit()
+    
+    flash('Space Admin Passkey updated successfully', 'success')
+    return redirect(url_for('space_admin_panel'))

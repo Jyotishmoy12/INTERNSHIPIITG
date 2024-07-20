@@ -184,6 +184,9 @@
         {% if current_user.role == 'pg_student_admin' %}
         <a href="{{ url_for('download_all_data') }}" class="btn">Download All Data</a>
         {% endif %}
+        {% if current_user.role == 'space_admin' %}
+        <a href="{{ url_for('download_all_data') }}" class="btn">Download All Data</a>
+        {% endif %}
     </div>
     <div class="table-container">
         <table id="studentTable">
@@ -257,6 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const isAdmin = userRole === 'admin';
     const isPgStudentAdmin = userRole === 'pg_student_admin';
     const isEquipmentAdmin = userRole === 'equipment_admin';
+    const isSpaceAdmin=userRole==='space_admin'
 
     if (isAdmin) {
         const toggleFiltersBtn = document.getElementById('toggleFilters');
@@ -429,10 +433,21 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+    if (isSpaceAdmin) {
+        const downloadAllDataBtn = document.querySelector('a[href="{{ url_for("download_all_data") }}"]');
+        if (downloadAllDataBtn) {
+            downloadAllDataBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = "{{ url_for('download_all_data') }}";
+            });
+        }
+    }
 });
+
+
 </script>
 
-{% if current_user.role in ['admin', 'equipment_admin', 'pg_student_admin'] %}
+{% if current_user.role in ['admin', 'equipment_admin', 'pg_student_admin', 'space_admin'] %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 {% endif %}
 {% endblock content %}
