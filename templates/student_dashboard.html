@@ -158,6 +158,9 @@
 </style>
 
 <div class="dashboard-container">
+    <a href="{{ url_for('pg_student_dashboard') }}" class="dashboard-btn">PG Student Dashboard</a>
+    <a href="{{ url_for('equipment_dashboard') }}" class="dashboard-btn">Equipment Dashboard</a>
+    <a href="{{ url_for('space_dashboard') }}" class="dashboard-btn">Space Dashboard</a>
     <h1>Student Dashboard</h1>
     <div class="control-panel">
         {% if current_user.role == 'admin' %}

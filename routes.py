@@ -428,7 +428,7 @@ def pg_student_admin_panel():
                     missing_columns = [col for col in required_columns if col not in df.columns]
                     if missing_columns:
                         flash(f'Missing columns: {", ".join(missing_columns)}', 'danger')
-                        return redirect(url_for('pg_student_admin_panel'))
+                        return render_template('pg_student_admin_panel.html')
                     
                     for _, row in df.iterrows():
                         pg_student_data = PGStudentData(
@@ -473,12 +473,14 @@ def pg_student_admin_panel():
             except Exception as e:
                 flash(f'Error adding PG student data: {str(e)}', 'danger')
 
-    return redirect(url_for('pg_student_dashboard'))
+    # Fetch existing PG student data for display
+    pg_students = PGStudentData.query.all()
+    return render_template('pg_student_admin_panel.html', pg_students=pg_students)
 
 @app.route("/pg_student_dashboard", methods=['GET', 'POST'])
 @login_required
 def pg_student_dashboard():
-    if current_user.role not in ['pg_student_admin', 'admin', 'equipment_admin', 'space_admin']:
+    if current_user.role not in ['pg_student_admin', 'admin', 'equipment_admin', 'space_admin', 'student']:
         flash('Access denied. You must be a PG Student Admin, Admin, Equipment Admin or space admin to view this page.', 'danger')
         return redirect(url_for('home'))
 
@@ -920,7 +922,7 @@ def delete_equipment(id):
 @app.route("/equipment_dashboard")
 @login_required
 def equipment_dashboard():
-    if current_user.role not in ['equipment_admin', 'admin', 'pg_student_admin', 'space_admin']:
+    if current_user.role not in ['equipment_admin', 'admin', 'pg_student_admin', 'space_admin', 'student']:
         flash('Access denied. You must be an Equipment Admin, Admin, PG Student Admin, or Space Admin to view this page.', 'danger')
         return redirect(url_for('home'))
     
@@ -1165,7 +1167,7 @@ def space_admin_panel():
 @app.route('/space_dashboard', methods=['GET'])
 @login_required
 def space_dashboard():
-    if current_user.role not in ['space_admin', 'admin' , 'pg_student_admin', 'equipment_admin']:
+    if current_user.role not in ['space_admin', 'admin' , 'pg_student_admin', 'equipment_admin', 'student']:
         flash('Access denied. You must be a Space Admin Admin or Pg student admin to view this page.', 'danger')
         return redirect(url_for('home'))
     
