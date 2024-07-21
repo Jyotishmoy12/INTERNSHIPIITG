@@ -196,6 +196,9 @@
     </div>
 
     <div class="dashboard-links">
+        {%if current_user.role=='super_admin' %}
+            <a href="{{ url_for('super_admin_panel') }}" class="dashboard-link">Super Admin Panel</a>
+            {% endif %}
         <a href="{{ url_for('space_dashboard') }}" class="dashboard-link">Space Dashboard</a>
         <a href="{{ url_for('student_dashboard') }}" class="dashboard-link">TA Dashboard</a>
         <a href="{{ url_for('pg_student_dashboard') }}" class="dashboard-link">Pg Student Dashboard</a>

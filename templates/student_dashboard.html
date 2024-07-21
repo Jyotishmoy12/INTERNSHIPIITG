@@ -209,6 +209,7 @@
 
 </style>
 
+
 <div class="dashboard-container">
     {% if current_user.role == 'student' %}
     <a href="{{ url_for('pg_student_dashboard') }}" class="dashboard-btn">PG Student Dashboard</a>
@@ -217,7 +218,7 @@
     {% endif %}
     <h1>Student Dashboard</h1>
     <div class="control-panel">
-        {% if current_user.role == 'admin' %}
+        {% if current_user.role == 'admin' or current_user.role == 'super_admin'%}
         <button id="toggleFilters" class="btn">Toggle Filters</button>
         <input type="text" id="searchInput" class="search-input" placeholder="Search...">
         <button id="resetFilters" class="btn">Reset Filters</button>
@@ -256,11 +257,11 @@
                     <th class="column-header" data-column="instructor">Instructor</th>
                     <th class="column-header" data-column="extra_column1">Extra Column 1</th>
                     <th class="column-header" data-column="extra_column2">Extra Column 2</th>
-                    {% if current_user.role == 'admin' %}
+                    {% if current_user.role == 'admin' or current_user.role == 'super_admin' %}
                     <th>Action</th>
                     {% endif %}
                 </tr>
-                {% if current_user.role == 'admin' %}
+                {% if current_user.role == 'admin' or current_user.role == 'super_admin' %}
                 <tr class="filter-row">
                     <th class="filter-cell"><input type="text" class="filter-input" data-column="student_name"></th>
                     <th class="filter-cell"><input type="text" class="filter-input" data-column="subject"></th>
@@ -283,7 +284,7 @@
                         <td>{{ data.instructor }}</td>
                         <td>{{ data.extra_column1 }}</td>
                         <td>{{ data.extra_column2 }}</td>
-                        {% if current_user.role == 'admin' %}
+                        {% if current_user.role == 'admin' or current_user.role == 'super_admin'%}
                         <td>
                             <form action="{{ url_for('delete_student_data', id=data.id) }}" method="POST">
                                 <button type="submit" class="btn">Delete</button>
@@ -295,7 +296,7 @@
             </tbody>
         </table>
     </div>
-    {% if current_user.role == 'admin' %}
+    {% if current_user.role == 'admin' or current_user.role == 'super_admin'%}
     <div class="pagination">
         <button id="prevPage" class="btn">Previous</button>
         <span id="pageInfo"></span>
@@ -318,8 +319,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const isPgStudentAdmin = userRole === 'pg_student_admin';
     const isEquipmentAdmin = userRole === 'equipment_admin';
     const isSpaceAdmin=userRole==='space_admin'
+    const isSuperAdmin = userRole=='super_admin'
 
-    if (isAdmin) {
+    if (isAdmin || isSuperAdmin) {
         const toggleFiltersBtn = document.getElementById('toggleFilters');
         const resetFiltersBtn = document.getElementById('resetFilters');
         const searchInput = document.getElementById('searchInput');
@@ -504,7 +506,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </script>
 
-{% if current_user.role in ['admin', 'equipment_admin', 'pg_student_admin', 'space_admin'] %}
+{% if current_user.role in ['admin', 'equipment_admin', 'pg_student_admin', 'space_admin', 'super_admin'] %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 {% endif %}
 {% endblock content %}

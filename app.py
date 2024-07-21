@@ -10,7 +10,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
 from routes import *
-from models import User, StudentData, Passkey, PGStudentAdminPasskey, EquipmentAdminPasskey,SpaceAdminPasskey
+from models import User, StudentData, Passkey, PGStudentAdminPasskey, EquipmentAdminPasskey,SpaceAdminPasskey, SuperAdminPasskey
 
 if __name__ == '__main__':
     with app.app_context():
@@ -33,6 +33,11 @@ if __name__ == '__main__':
         if not SpaceAdminPasskey.query.first():
             initial_space_admin_passkey = SpaceAdminPasskey(passkey='4321')
             db.session.add(initial_space_admin_passkey)
+            db.session.commit()
+
+        if not SuperAdminPasskey.query.first():
+            initial_super_admin_passkey = SuperAdminPasskey(passkey='mars')
+            db.session.add(initial_super_admin_passkey)
             db.session.commit()
     
     print("Database tables created and initial data added.")

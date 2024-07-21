@@ -238,6 +238,7 @@
         <button id="admin-passkey-btn" class="admin-btn">Admin Access</button>
         <button id="equipment-admin-btn" class="admin-btn">Equipment Admin</button>
         <button id="space-admin-btn" class="admin-btn">Space Admin</button>
+        <button id="super-admin-btn" class="admin-btn">Super Admin</button>
     </div>
 
     <div class="login-form">
@@ -304,6 +305,17 @@
     </div>
 </div>
 
+<div id="super-admin-passkey-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Enter Super Admin Passkey</h2>
+        <form id="super-admin-passkey-form">
+            <input type="password" id="super-admin-passkey" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+
 <script>
     var adminModal = document.getElementById("admin-passkey-modal");
     var adminBtn = document.getElementById("admin-passkey-btn");
@@ -313,6 +325,12 @@
     var equipmentAdminBtn = document.getElementById("equipment-admin-btn");
     var spaceAdminModal = document.getElementById("space-admin-passkey-modal");
     var spaceAdminBtn = document.getElementById("space-admin-btn");
+    var superAdminModal = document.getElementById("super-admin-passkey-modal");
+    var superAdminBtn = document.getElementById("super-admin-btn");
+
+    superAdminBtn.onclick = function() {
+    superAdminModal.style.display = "block";
+}
 
     adminBtn.onclick = function() {
         adminModal.style.display = "block";
@@ -446,5 +464,30 @@
             alert('An error occurred. Please try again.');
         });
     });
+
+    document.getElementById("super-admin-passkey-form").addEventListener('submit', function(e) {
+    e.preventDefault();
+    const passkey = document.getElementById('super-admin-passkey').value;
+
+    fetch('/check_super_admin_passkey', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `passkey=${encodeURIComponent(passkey)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valid) {
+            window.location.href = '/super_admin_register';
+        } else {
+            alert('Invalid passkey');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+}); 
 </script>
 {% endblock content %}

@@ -165,7 +165,7 @@
         <a href="{{ url_for('space_admin_panel') }}" class="admin-panel-link">Go to Admin Panel</a>
         {% endif %}
         <div class="action-buttons">
-            {% if current_user.role == 'space_admin' %}
+            {% if current_user.role == 'space_admin' or current_user.role == 'super_admin'%}
             <a href="{{ url_for('download_filtered_space_data', search_query=search_query, fac_incharge=fac_incharge, staff_incharge=staff_incharge, min_area=min_area, max_area=max_area, min_pg_students=min_pg_students, max_pg_students=max_pg_students) }}" class="btn btn-success">Download Filtered Data</a>
             <form action="{{ url_for('delete_all_space_data') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all space data? This action cannot be undone.');">
                 <button type="submit" class="btn btn-danger">Delete All Space Data</button>
@@ -176,7 +176,7 @@
         </div>
     </div>
 
-    {% if current_user.role == 'space_admin' %}
+    {% if current_user.role == 'space_admin' or current_user.role == 'super_admin'%}
     <form method="GET" action="{{ url_for('space_dashboard') }}" class="filter-form">
         <div class="form-row">
             <div class="form-group">
@@ -237,7 +237,7 @@
                     <th>Comments</th>
                     <th>Extra Column 1</th>
                     <th>Extra Column 2</th>
-                    {% if current_user.role == 'space_admin' %}
+                    {% if current_user.role == 'space_admin' or current_user.role == 'super_admin'%}
                     <th>Action</th>
                     {% endif %}
                 </tr>

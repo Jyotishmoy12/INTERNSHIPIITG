@@ -152,6 +152,9 @@
         <p class="panel-description">Welcome to the Equipment Admin Panel. Here you can manage equipment-related tasks.</p>
 
         <div class="dashboard-buttons">
+            {%if current_user.role=='super_admin' %}
+            <a href="{{ url_for('super_admin_panel') }}" class="dashboard-btn btn-info">SUPER ADMIN PANEL</a>
+            {% endif %}
             <a href="{{ url_for('equipment_dashboard') }}" class="dashboard-btn btn-primary">View Equipment Dashboard</a>
             <a href="{{ url_for('pg_student_dashboard') }}" class="dashboard-btn btn-secondary">PG Student Dashboard</a>
             <a href="{{ url_for('student_dashboard') }}" class="dashboard-btn btn-info">TA Dashboard</a>

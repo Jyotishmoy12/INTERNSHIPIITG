@@ -2,7 +2,7 @@ from flask import render_template, url_for, flash, redirect, request, jsonify,se
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db
-from models import User, StudentData, Passkey, PGStudentAdminPasskey, PGStudentData, EquipmentAdminPasskey, Equipment, SpaceAdminPasskey, Space
+from models import User, StudentData, Passkey, PGStudentAdminPasskey, PGStudentData, EquipmentAdminPasskey, Equipment, SpaceAdminPasskey, Space,SuperAdminPasskey
 import pandas as pd
 import xlsxwriter
 from io import BytesIO
@@ -69,7 +69,7 @@ def forgot_password():
 @app.route("/student_dashboard")
 @login_required
 def student_dashboard():
-    if current_user.role not in ['student', 'admin', 'pg_student_admin', 'equipment_admin', 'space_admin']:
+    if current_user.role not in ['student', 'admin', 'pg_student_admin', 'equipment_admin', 'space_admin', 'super_admin']:
         flash('Access denied. You must be a student, admin, PG student admin, equipment admin or space admin to view this page.', 'danger')
         return redirect(url_for('home'))
 
@@ -94,7 +94,7 @@ def student_dashboard():
 @app.route("/download_all_student_data")
 @login_required
 def download_all_student_data():
-    if current_user.role not in ['admin', 'pg_student_admin', 'equipment_admin', 'space_admin']:
+    if current_user.role not in ['admin', 'pg_student_admin', 'equipment_admin', 'space_admin', 'super_admin']:
         flash('Access denied. You must be an Admin, PG Student Admin, Equipment Admin, or Space Admin to download all data.', 'danger')
         return redirect(url_for('home'))
 
@@ -131,7 +131,7 @@ def download_all_student_data():
 @app.route("/download_all_data")
 @login_required
 def download_all_data():
-    if current_user.role not in ['admin', 'pg_student_admin', 'space_admin']:
+    if current_user.role not in ['admin', 'pg_student_admin', 'space_admin', 'super_admin']:
         flash('Access denied. You must be an admin or PG Student Admin to download data.', 'danger')
         return redirect(url_for('home'))
 
@@ -169,8 +169,8 @@ def download_all_data():
 @app.route("/admin_panel")
 @login_required
 def admin_panel():
-    if current_user.role != 'admin':
-        flash('Access denied. You must be an admin to view this page.', 'danger')
+    if current_user.role not in ['admin', 'super_admin']:
+        flash('Access denied. You must be an admin or super admin to view this page.', 'danger')
         return redirect(url_for('home'))
     return render_template('admin_panel.html', title='Admin Panel')
 
@@ -279,7 +279,7 @@ def admin_forgot_password():
 @app.route("/upload_excel", methods=['POST'])
 @login_required
 def upload_excel():
-    if current_user.role != 'admin':
+    if current_user.role not in ['admin', 'super_admin']:
         flash('Access denied. You must be an admin to upload data.', 'danger')
         return redirect(url_for('home'))
     if 'file' not in request.files:
@@ -321,7 +321,7 @@ def upload_excel():
 @app.route("/add_student_data", methods=['POST'])
 @login_required
 def add_student_data():
-    if current_user.role != 'admin':
+    if current_user.role not in ['admin', 'super_admin']:
         flash('Access denied. You must be an admin to add student data.', 'danger')
         return redirect(url_for('home'))
     student_data = StudentData(
@@ -341,7 +341,7 @@ def add_student_data():
 @app.route("/delete_student_data/<int:id>", methods=['POST'])
 @login_required
 def delete_student_data(id):
-    if current_user.role != 'admin':
+    if current_user.role not in ['admin', 'super_admin']:
         flash('Access denied. You must be an admin to delete student data.', 'danger')
         return redirect(url_for('home'))
     student_data = StudentData.query.get_or_404(id)
@@ -353,7 +353,7 @@ def delete_student_data(id):
 @app.route("/delete_all_student_data", methods=['POST'])
 @login_required
 def delete_all_student_data():
-    if current_user.role != 'admin':
+    if current_user.role not in ['admin', 'super_admin']:
         flash('Access denied. You must be an admin to delete all student data.', 'danger')
         return redirect(url_for('home'))
     StudentData.query.delete()
@@ -414,7 +414,7 @@ def pg_student_admin_login():
 @app.route("/pg_student_admin_panel", methods=['GET', 'POST'])
 @login_required
 def pg_student_admin_panel():
-    if current_user.role != 'pg_student_admin':
+    if current_user.role not in ['pg_student_admin' , 'super_admin']:
         flash('Access denied. You must be a PG Student Admin to view this page.', 'danger')
         return redirect(url_for('home'))
     
@@ -480,7 +480,7 @@ def pg_student_admin_panel():
 @app.route("/pg_student_dashboard", methods=['GET', 'POST'])
 @login_required
 def pg_student_dashboard():
-    if current_user.role not in ['pg_student_admin', 'admin', 'equipment_admin', 'space_admin', 'student']:
+    if current_user.role not in ['pg_student_admin', 'admin', 'equipment_admin', 'space_admin', 'student', 'super_admin']:
         flash('Access denied. You must be a PG Student Admin, Admin, Equipment Admin or space admin to view this page.', 'danger')
         return redirect(url_for('home'))
 
@@ -554,7 +554,7 @@ def pg_student_dashboard():
 @app.route("/download_all_pg_data")
 @login_required
 def download_all_pg_data():
-    if current_user.role not in ['admin', 'pg_student_admin', 'equipment_admin', 'space_admin']:
+    if current_user.role not in ['admin', 'pg_student_admin', 'equipment_admin', 'space_admin', 'super_admin']:
         flash('Access denied. You must be an Admin, PG Student Admin, Equipment Admin or space admin to download all data.', 'danger')
         return redirect(url_for('home'))
 
@@ -602,7 +602,7 @@ def download_all_pg_data():
 @app.route("/download_filtered_pg_data")
 @login_required
 def download_filtered_pg_data():
-    if current_user.role not in ['pg_student_admin', 'admin']:
+    if current_user.role not in ['pg_student_admin', 'admin', 'super_admin']:
         flash('Access denied. You must be a PG Student Admin or Admin to download data.', 'danger')
         return redirect(url_for('home'))
 
@@ -725,7 +725,7 @@ def set_pg_student_admin_passkey():
 @app.route("/delete_pg_student_data/<int:id>", methods=['POST'])
 @login_required
 def delete_pg_student_data(id):
-    if current_user.role not in ['pg_student_admin', 'admin']:
+    if current_user.role not in ['pg_student_admin', 'admin', 'super_admin']:
         flash('Access denied. You must be a PG Student Admin or Admin to delete data.', 'danger')
         return redirect(url_for('home'))
     pg_student_data = PGStudentData.query.get_or_404(id)
@@ -737,7 +737,7 @@ def delete_pg_student_data(id):
 @app.route("/delete_all_pg_student_data", methods=['POST'])
 @login_required
 def delete_all_pg_student_data():
-    if current_user.role not in ['pg_student_admin', 'admin']:
+    if current_user.role not in ['pg_student_admin', 'admin', 'super_admin']:
         flash('Access denied. You must be a PG Student Admin or Admin to delete all data.', 'danger')
         return redirect(url_for('home'))
     PGStudentData.query.delete()
@@ -803,7 +803,7 @@ def equipment_admin_login():
 @app.route("/equipment_admin_panel", methods=['GET', 'POST'])
 @login_required
 def equipment_admin_panel():
-    if current_user.role != 'equipment_admin':
+    if current_user.role not in ['equipment_admin', 'super_admin']:
         flash('Access denied. You must be an Equipment Admin to view this page.', 'danger')
         return redirect(url_for('home'))
     
@@ -909,7 +909,7 @@ def set_equipment_admin_passkey():
 @app.route("/delete_equipment/<int:id>", methods=['POST'])
 @login_required
 def delete_equipment(id):
-    if current_user.role != 'equipment_admin':
+    if current_user.role not in ['equipment_admin', 'super_admin']:
         flash('Access denied. You must be an Equipment Admin to delete equipment data.', 'danger')
         return redirect(url_for('home'))
     equipment = Equipment.query.get_or_404(id)
@@ -922,7 +922,7 @@ def delete_equipment(id):
 @app.route("/equipment_dashboard")
 @login_required
 def equipment_dashboard():
-    if current_user.role not in ['equipment_admin', 'admin', 'pg_student_admin', 'space_admin', 'student']:
+    if current_user.role not in ['equipment_admin', 'admin', 'pg_student_admin', 'space_admin', 'student', 'super_admin']:
         flash('Access denied. You must be an Equipment Admin, Admin, PG Student Admin, or Space Admin to view this page.', 'danger')
         return redirect(url_for('home'))
     
@@ -942,7 +942,7 @@ def equipment_dashboard():
 @app.route("/delete_all_equipment", methods=['POST'])
 @login_required
 def delete_all_equipment():
-    if current_user.role != 'equipment_admin':
+    if current_user.role not in ['equipment_admin', 'super_admin']:
         flash('Access denied. You must be an Equipment Admin to delete all equipment data.', 'danger')
         return redirect(url_for('home'))
     
@@ -1096,7 +1096,7 @@ def space_admin_login():
 @app.route('/space_admin_panel', methods=['GET', 'POST'])
 @login_required
 def space_admin_panel():
-    if current_user.role != 'space_admin':
+    if current_user.role not in ['space_admin', 'super_admin']:
         flash('You do not have permission to access this page', 'error')
         return redirect(url_for('home'))
     
@@ -1167,7 +1167,7 @@ def space_admin_panel():
 @app.route('/space_dashboard', methods=['GET'])
 @login_required
 def space_dashboard():
-    if current_user.role not in ['space_admin', 'admin' , 'pg_student_admin', 'equipment_admin', 'student']:
+    if current_user.role not in ['space_admin', 'admin' , 'pg_student_admin', 'equipment_admin', 'student', 'super_admin']:
         flash('Access denied. You must be a Space Admin Admin or Pg student admin to view this page.', 'danger')
         return redirect(url_for('home'))
     
@@ -1175,7 +1175,7 @@ def space_dashboard():
     query = Space.query
 
     # Apply filters only for space_admin
-    if current_user.role == 'space_admin':
+    if current_user.role  in ['space_admin', 'super_admin']:
         search_query = request.args.get('search_query', '')
         fac_incharge = request.args.get('fac_incharge', '')
         staff_incharge = request.args.get('staff_incharge', '')
@@ -1270,7 +1270,7 @@ def download_all_space_data():
 @app.route('/download_filtered_space_data')
 @login_required
 def download_filtered_space_data():
-    if current_user.role not in ['space_admin', 'admin']:
+    if current_user.role not in ['space_admin', 'admin', 'super_admin']:
         flash('Access denied. You must be a Space Admin or Admin to download data.', 'danger')
         return redirect(url_for('home'))
 
@@ -1380,7 +1380,7 @@ def delete_space_data(id):
 @app.route("/delete_all_space_data", methods=['POST'])
 @login_required
 def delete_all_space_data():
-    if current_user.role != 'space_admin':
+    if current_user.role not in ['space_admin', 'super_admin']:
         flash('Access denied. You must be a Space Admin to delete all space data.', 'danger')
         return redirect(url_for('home'))
     Space.query.delete()
@@ -1406,3 +1406,85 @@ def set_space_admin_passkey():
     
     flash('Space Admin Passkey updated successfully', 'success')
     return redirect(url_for('space_admin_panel'))
+
+
+@app.route("/check_super_admin_passkey", methods=['POST'])
+def check_super_admin_passkey():
+    passkey = request.form['passkey']
+    stored_passkey = SuperAdminPasskey.query.first()
+    if stored_passkey and passkey == stored_passkey.passkey:
+        session['super_admin_passkey_verified'] = True
+        return jsonify({'valid': True})
+    else:
+        return jsonify({'valid': False})
+
+@app.route('/super_admin_register', methods=['GET', 'POST'])
+def super_admin_register():
+    if not session.get('super_admin_passkey_verified'):
+        flash('Please enter the correct Super Admin passkey first.')
+        return redirect(url_for('login'))
+
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(username=username).first()
+        if user:
+            flash('Username already exists.')
+            return redirect(url_for('super_admin_register'))
+        
+        new_user = User(username=username, password=generate_password_hash(password, method='sha256'), role='super_admin')
+        db.session.add(new_user)
+        db.session.commit()
+        
+        session.pop('super_admin_passkey_verified', None)
+        flash('Super Admin registration successful. Please login.')
+        return redirect(url_for('super_admin_login'))
+    
+    return render_template('super_admin_register.html')
+
+@app.route('/super_admin_panel')
+@login_required
+def super_admin_panel():
+    if current_user.role != 'super_admin':
+        flash('You do not have permission to access this page.')
+        return redirect(url_for('login'))
+    return render_template('super_admin_panel.html')
+
+@app.route('/super_admin_login', methods=['GET', 'POST'])
+def super_admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(username=username, role='super_admin').first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('super_admin_panel'))
+        else:
+            flash('Invalid username or password', 'error')
+    
+    return render_template('super_admin_login.html')
+
+@app.route("/super_admin_forgot_password", methods=['GET', 'POST'])
+def super_admin_forgot_password():
+    if request.method == 'POST':
+        username = request.form['username']
+        new_password = request.form['new_password']
+        admin_passkey = request.form['admin_passkey']
+        
+        stored_passkey = SuperAdminPasskey.query.first()
+        if not stored_passkey or admin_passkey != stored_passkey.passkey:
+            flash('Invalid Super Admin passkey. Please try again.', 'danger')
+            return render_template('super_admin_forgot_password.html', title='Super Admin Forgot Password')
+        
+        user = User.query.filter_by(username=username, role='super_admin').first()
+        if user:
+            user.password = generate_password_hash(new_password)
+            db.session.commit()
+            flash('Your Super Admin password has been updated. You can now log in with your new password.', 'success')
+            return redirect(url_for('super_admin_login'))
+        else:
+            flash('Super Admin username not found. Please check and try again.', 'danger')
+    return render_template('super_admin_forgot_password.html', title='Super Admin Forgot Password')

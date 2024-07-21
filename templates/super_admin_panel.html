@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container">
+    <h1>Super Admin Panel</h1>
+    <p>Welcome, {{ current_user.username }}!</p>
+    <ul>
+        <li>
+            <a href="{{ url_for('equipment_admin_panel') }}">Equipment Admin Panel</a>
+            <a href="{{ url_for('pg_student_admin_panel') }}">PG Student Admin Panel</a>
+            <a href="{{ url_for('admin_panel') }}" >TA Admin Panel</a>
+            <a href="{{ url_for('space_admin_panel') }}">Space Admin Panel</a>
+        </li>
+    </ul>
+</div>
+{% endblock %}

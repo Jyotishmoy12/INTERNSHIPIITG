@@ -174,7 +174,7 @@
     <a href="{{ url_for('pg_student_dashboard') }}" class="dashboard-btn">PG Student Dashboard</a>
     {% endif %}
 
-    {% if current_user.role == 'equipment_admin' %}
+    {% if current_user.role == 'equipment_admin' or current_user.role == 'super_admin'%}
     <div class="filter-section">
         <form class="filter-form" method="GET" action="{{ url_for('equipment_dashboard') }}">
             <input type="text" name="search_query" placeholder="Search..." value="{{ search_query }}">
@@ -205,7 +205,7 @@
                     <th>Remarks</th>
                     <th>Extra Column 1</th>
                     <th>Extra Column 2</th>
-                    {% if current_user.role == 'equipment_admin' %}
+                    {% if current_user.role == 'equipment_admin' or current_user.role == 'super_admin'%}
                     <th>Action</th>
                     {% endif %}
                 </tr>
@@ -223,7 +223,7 @@
                     <td>{{ equipment.remarks }}</td>
                     <td>{{ equipment.extra_column1 }}</td>
                     <td>{{ equipment.extra_column2 }}</td>
-                    {% if current_user.role == 'equipment_admin' %}
+                    {% if current_user.role == 'equipment_admin' or current_user.role == 'super_admin'%}
                     <td>
                         <form action="{{ url_for('delete_equipment', id=equipment.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this equipment data?');">
                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
@@ -263,7 +263,7 @@
     <div class="action-buttons">
         {% if current_user.role == 'space_admin' or current_user.role == 'admin' or current_user.role == 'pg_student_admin' %}
         <a href="{{ url_for('download_all_equipment_data') }}" class="btn btn-success">Download All Equipment Data (Excel)</a>
-        {% elif current_user.role == 'equipment_admin' %}
+        {% elif current_user.role == 'equipment_admin' or current_user.role == 'super_admin'%}
         <a href="{{ url_for('download_filtered_equipment_data', search_query=search_query, status_filter=status_filter) }}" class="btn btn-success">Download Filtered Data (Excel)</a>
         <a href="{{ url_for('equipment_admin_panel') }}" class="btn btn-primary">View Equipment Admin Panel</a>
         {% endif %}

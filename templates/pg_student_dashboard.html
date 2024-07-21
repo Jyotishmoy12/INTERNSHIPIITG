@@ -12,7 +12,7 @@
             <a href="{{ url_for('download_all_pg_data') }}" class="btn btn-success">Download All Data</a>
         </div>
         {% endif %}
-        {% if current_user.role == 'pg_student_admin' %} 
+        {% if current_user.role == 'pg_student_admin' or current_user.role == 'super_admin'%} 
     
     <div class="navigation-buttons">
         <a href="{{ url_for('pg_student_admin_panel') }}" class="btn btn-info">Go to Admin Panel</a>
