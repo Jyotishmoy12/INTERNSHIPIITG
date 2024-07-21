@@ -216,7 +216,7 @@
     <a href="{{ url_for('equipment_dashboard') }}" class="dashboard-btn">Equipment Dashboard</a>
     <a href="{{ url_for('space_dashboard') }}" class="dashboard-btn">Space Dashboard</a>
     {% endif %}
-    <h1>Student Dashboard</h1>
+    <h1>TA Dashboard</h1>
     <div class="control-panel">
         {% if current_user.role == 'admin' or current_user.role == 'super_admin'%}
         <button id="toggleFilters" class="btn">Toggle Filters</button>
