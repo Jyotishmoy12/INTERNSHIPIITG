@@ -1,15 +1,99 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="container">
-    <h1>Super Admin Panel</h1>
-    <p>Welcome, {{ current_user.username }}!</p>
-    <ul>
-        <li>
-            <a href="{{ url_for('equipment_admin_panel') }}">Equipment Admin Panel</a>
-            <a href="{{ url_for('pg_student_admin_panel') }}">PG Student Admin Panel</a>
-            <a href="{{ url_for('admin_panel') }}" >TA Admin Panel</a>
-            <a href="{{ url_for('space_admin_panel') }}">Space Admin Panel</a>
-        </li>
-    </ul>
+<style>
+    .super-admin-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #f0f4f8;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .welcome-card {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease;
+    }
+    .welcome-card:hover {
+        transform: translateY(-5px);
+    }
+    .welcome-card h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .welcome-card p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    .admin-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    .admin-link-card {
+        background-color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-decoration: none;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .admin-link-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    .admin-link-card i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    .admin-link-card span {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+</style>
+
+<div class="super-admin-container">
+    <div class="welcome-card fade-in">
+        <h1>Super Admin Panel</h1>
+        <p>Welcome, {{ current_user.username }}!</p>
+    </div>
+    <div class="admin-links">
+        <a href="{{ url_for('equipment_admin_panel') }}" class="admin-link-card fade-in" style="animation-delay: 0.1s;">
+            <i class="fas fa-tools"></i>
+            <span>Equipment Admin Panel</span>
+        </a>
+        <a href="{{ url_for('pg_student_admin_panel') }}" class="admin-link-card fade-in" style="animation-delay: 0.2s;">
+            <i class="fas fa-user-graduate"></i>
+            <span>PG Student Admin Panel</span>
+        </a>
+        <a href="{{ url_for('admin_panel') }}" class="admin-link-card fade-in" style="animation-delay: 0.3s;">
+            <i class="fas fa-chalkboard-teacher"></i>
+            <span>TA Admin Panel</span>
+        </a>
+        <a href="{{ url_for('space_admin_panel') }}" class="admin-link-card fade-in" style="animation-delay: 0.4s;">
+            <i class="fas fa-building"></i>
+            <span>Space Admin Panel</span>
+        </a>
+    </div>
 </div>
+
+<!-- Add Font Awesome for icons -->
+<script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
 {% endblock %}
