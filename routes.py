@@ -1488,3 +1488,22 @@ def super_admin_forgot_password():
         else:
             flash('Super Admin username not found. Please check and try again.', 'danger')
     return render_template('super_admin_forgot_password.html', title='Super Admin Forgot Password')
+
+@app.route("/set_super_admin_passkey", methods=['POST'])
+@login_required
+def set_super_admin_passkey():
+    if current_user.role != 'super_admin':
+        flash('Access denied. You must be a Super Admin to set a new passkey.', 'danger')
+        return redirect(url_for('home'))
+    
+    new_passkey = request.form['new_passkey']
+    passkey = SuperAdminPasskey.query.first()
+    if passkey:
+        passkey.passkey = new_passkey
+    else:
+        passkey = SuperAdminPasskey(passkey=new_passkey)
+        db.session.add(passkey)
+    db.session.commit()
+    
+    flash('Super Admin Passkey updated successfully', 'success')
+    return redirect(url_for('super_admin_panel'))

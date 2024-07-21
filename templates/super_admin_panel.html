@@ -67,6 +67,37 @@
     .fade-in {
         animation: fadeIn 0.5s ease-out forwards;
     }
+    /* New styles for passkey form */
+    .passkey-form {
+        background-color: white;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-top: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .passkey-form h2 {
+        color: #333;
+        margin-bottom: 1rem;
+    }
+    .passkey-form input[type="password"] {
+        width: 100%;
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    .passkey-form button {
+        background-color: #2575fc;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .passkey-form button:hover {
+        background-color: #1c5cc9;
+    }
 </style>
 
 <div class="super-admin-container">
@@ -91,6 +122,15 @@
             <i class="fas fa-building"></i>
             <span>Space Admin Panel</span>
         </a>
+    </div>
+
+    <!-- New Super Admin Passkey Form -->
+    <div class="passkey-form fade-in" style="animation-delay: 0.5s;">
+        <h2>Set New Super Admin Passkey</h2>
+        <form action="{{ url_for('set_super_admin_passkey') }}" method="POST">
+            <input type="password" name="new_passkey" placeholder="Enter new passkey" required>
+            <button type="submit">Set New Passkey</button>
+        </form>
     </div>
 </div>
 
