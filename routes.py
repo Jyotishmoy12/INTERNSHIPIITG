@@ -812,26 +812,28 @@ def equipment_admin_panel():
             file = request.files['file']
             if file and file.filename.endswith('.xlsx'):
                 try:
-                    df = pd.read_excel(file)
-                    required_columns = ['Description', 'P.O. No.with Date', 'Qty.', 'Price', 'Location', 'Dept. Stock Register No.', 'Status', 'Remarks']
+                    # Read Excel file, replace empty values with NaN
+                    df = pd.read_excel(file).fillna(value=pd.NA)
+                    
+                    required_columns = ['Description', 'P.O. No.with Date', 'Qty.', 'Price', 'Location', 'Dept. Stock Register No.']
                     missing_columns = [col for col in required_columns if col not in df.columns]
                     if missing_columns:
-                        flash(f'Missing columns: {", ".join(missing_columns)}', 'danger')
+                        flash(f'Missing required columns: {", ".join(missing_columns)}', 'danger')
                         return redirect(url_for('equipment_admin_panel'))
                     
                     for _, row in df.iterrows():
                         equipment = Equipment(
-                            sl_no=str(row.get('Sl No', '')),
-                            description=str(row['Description']),
-                            po_no_date=str(row['P.O. No.with Date']),
-                            quantity=str(row['Qty.']),
-                            price=str(row['Price']),
-                            location=str(row['Location']),
-                            dept_stock_register_no=str(row['Dept. Stock Register No.']),
-                            status=str(row['Status']),
-                            remarks=str(row['Remarks']),
-                            extra_column1=str(row.get('Extra Column 1', '')),
-                            extra_column2=str(row.get('Extra Column 2', ''))
+                            sl_no=str(row.get('Sl No', '') or ''),
+                            description=str(row['Description'] or ''),
+                            po_no_date=str(row['P.O. No.with Date'] or ''),
+                            quantity=str(row['Qty.'] or ''),
+                            price=str(row['Price'] or ''),
+                            location=str(row['Location'] or ''),
+                            dept_stock_register_no=str(row['Dept. Stock Register No.'] or ''),
+                            status=str(row.get('Status', '') or ''),
+                            remarks=str(row.get('Remarks', '') or ''),
+                            extra_column1=str(row.get('Extra Column 1', '') or ''),
+                            extra_column2=str(row.get('Extra Column 2', '') or '')
                         )
                         db.session.add(equipment)
                     db.session.commit()
