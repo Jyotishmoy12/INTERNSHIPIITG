@@ -1,3 +1,5 @@
+# FEATURES: 
+
 • Developed a comprehensive student-teacher assistant management system for the Department of
 Electrical and Electronics Engineering (EEE) at IIT Guwahati.
 • Implemented robust user verification protocols and a password recovery mechanism to ensure
@@ -34,6 +36,23 @@ a remarkable 60% reduction in manual workload.
 
 ![Screenshot 2024-10-20 185321](https://github.com/user-attachments/assets/0e498473-091e-4523-9f3f-8fd703c27ba3)
 ![Screenshot 2024-10-20 185342](https://github.com/user-attachments/assets/be03e673-6adc-4dd4-b17c-b70f91e465e7)
+
+# TA ADMIN PASSKEY
+
+![Screenshot 2024-10-20 194133](https://github.com/user-attachments/assets/c249f552-ad78-486a-bad7-649d9eda769f)
+
+# TA ADMIN DASHBOARD
+
+![Screenshot 2024-10-20 194322](https://github.com/user-attachments/assets/b23ff1e6-44be-4bdf-86a3-edbea714e64d)
+![Screenshot 2024-10-20 194334](https://github.com/user-attachments/assets/db25e868-9f5b-47cd-89db-78498de5bd06)
+
+# TA DASHBOARD
+
+![Screenshot 2024-10-20 194452](https://github.com/user-attachments/assets/b5308d44-118c-453c-a44c-6083ae8e4b82)
+
+
+
+
 
 
 
