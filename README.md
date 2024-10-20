@@ -1,19 +1,19 @@
 # FEATURES: 
 
-• Developed a comprehensive student-teacher assistant management system for the Department of
+• Developed a comprehensive **student-teacher assistant management** system for the Department of
 Electrical and Electronics Engineering (EEE) at IIT Guwahati.
-• Implemented robust user verification protocols and a password recovery mechanism to ensure
+• Implemented robust user verification protocols and a **password recovery** mechanism to ensure
 secure and seamless access for administrators.
-• Engineered an advanced filtering system to efficiently handle student and teaching assistant data,
+• Engineered an **advanced filtering system** to efficiently handle student and teaching assistant data,
 enhancing data retrieval and management capabilities.
-• Enabled administrators to effortlessly manage information by facilitating Excel sheet uploads and
+• Enabled administrators to effortlessly manage information by facilitating **Excel sheet** uploads and
 manual data entry, significantly optimizing operational efficiency.
-• Empowered various administrative roles including PG student admin, Teaching assistant admin,
-Space admin, Equipment admin, and a Super user, with tailored access to multiple dashboards
+• Empowered various administrative roles including **PG student admin**, **Teaching assistant admin**,
+**Space admin**, **Equipment admin**, and a **Super user**, with tailored access to multiple dashboards
 and functionalities.
-• Successfully managed data for over 500 students, 20 labs, and 10 equipment categories, achieving
-a remarkable 60% reduction in manual workload.
-• Tech: HTML, CSS, JavaScript, Flask, SQLite, Bootstrap
+• Successfully managed data for over **500 students**, **20 labs**, and **10 equipment** categories, achieving
+a remarkable **60%** reduction in manual workload.
+• Tech: **HTML**, **CSS**, **JavaScript**, **Flask**, **SQLite**, **Bootstrap**
 
 # HOME PAGE
 
