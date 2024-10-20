@@ -2,6 +2,7 @@
 
 • Developed a comprehensive **student-teacher assistant management** system for the Department of
 Electrical and Electronics Engineering (EEE) at IIT Guwahati.
+<br/>
 • Implemented robust user verification protocols and a **password recovery** mechanism to ensure
 secure and seamless access for administrators.
 • Engineered an **advanced filtering system** to efficiently handle student and teaching assistant data,
