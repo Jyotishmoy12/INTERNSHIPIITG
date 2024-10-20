@@ -50,6 +50,21 @@ a remarkable 60% reduction in manual workload.
 
 ![Screenshot 2024-10-20 194452](https://github.com/user-attachments/assets/b5308d44-118c-453c-a44c-6083ae8e4b82)
 
+# EQUIPMENT PASSKEY
+
+![Screenshot 2024-10-20 194948](https://github.com/user-attachments/assets/8aac67f1-8312-4a5f-a8ff-83b0482b1ea7)
+
+# EQUIPMENT ADMIN PANEL
+
+![Screenshot 2024-10-20 195431](https://github.com/user-attachments/assets/ef921ede-6747-45c2-ab0d-7391bfc3bf61)
+![Screenshot 2024-10-20 195444](https://github.com/user-attachments/assets/3a4b49ec-e749-46a4-8688-fbc69997c4ab)
+![Screenshot 2024-10-20 195502](https://github.com/user-attachments/assets/7cce1d79-9494-45a8-ba92-d49de77f7307)
+
+# EQUIPMENT DASHBOARD
+
+![Screenshot 2024-10-20 195519](https://github.com/user-attachments/assets/6ba7d5f3-6002-42ff-addd-0674032b0317)
+
+
 
 
 
