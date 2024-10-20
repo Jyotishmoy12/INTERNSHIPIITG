@@ -1,4 +1,4 @@
-# FEATURES: 
+![Screenshot 2024-10-20 200704](https://github.com/user-attachments/assets/eccf89e2-eb06-4413-b9d0-bb2eb6a6b5c5)# FEATURES: 
 
 • Developed a comprehensive student-teacher assistant management system for the Department of
 Electrical and Electronics Engineering (EEE) at IIT Guwahati.
@@ -63,6 +63,36 @@ a remarkable 60% reduction in manual workload.
 # EQUIPMENT DASHBOARD
 
 ![Screenshot 2024-10-20 195519](https://github.com/user-attachments/assets/6ba7d5f3-6002-42ff-addd-0674032b0317)
+
+# SPACE ADMIN PASSKEY
+
+![Screenshot 2024-10-20 195926](https://github.com/user-attachments/assets/09fbd2da-003d-43ff-9d4a-c7d6ecedb149)
+
+# SPACE ADMIN PANEL
+
+![Screenshot 2024-10-20 195846](https://github.com/user-attachments/assets/a632026b-b46b-4a99-a471-64db35ace617)
+![Screenshot 2024-10-20 195855](https://github.com/user-attachments/assets/628f8728-5017-4ef2-99d9-54c9888d053a)
+
+# SPACE DASHBOARD
+
+![Screenshot 2024-10-20 195908](https://github.com/user-attachments/assets/4a1e9929-9df6-40b6-acf7-2d4e1379037a)
+
+# SUPER ADMIN PASSKEY
+
+![Screenshot 2024-10-20 200446](https://github.com/user-attachments/assets/55de7465-7a26-44bf-b3a0-2cfd9717f99f)
+
+# SUPER ADMIN PANEL
+
+![Screenshot 2024-10-20 200316](https://github.com/user-attachments/assets/aaae5360-1c9c-4b04-858b-adc8c55eb8ee)
+![Screenshot 2024-10-20 200324](https://github.com/user-attachments/assets/09f5c879-d8de-41c5-b34a-c0dec81cc467)
+
+# STUDENT DASHBOARD
+
+![Screenshot 2024-10-20 200704](https://github.com/user-attachments/assets/673f6831-77b2-43ab-a9be-867014882363)
+
+
+
+
 
 
 
