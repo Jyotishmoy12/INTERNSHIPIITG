@@ -1,4 +1,4 @@
-![Screenshot 2024-10-20 200704](https://github.com/user-attachments/assets/eccf89e2-eb06-4413-b9d0-bb2eb6a6b5c5)# FEATURES: 
+# FEATURES: 
 
 • Developed a comprehensive student-teacher assistant management system for the Department of
 Electrical and Electronics Engineering (EEE) at IIT Guwahati.
