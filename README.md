@@ -5,15 +5,20 @@ Electrical and Electronics Engineering (EEE) at IIT Guwahati.
 <br/>
 • Implemented robust user verification protocols and a **password recovery** mechanism to ensure
 secure and seamless access for administrators.
+<br/>
 • Engineered an **advanced filtering system** to efficiently handle student and teaching assistant data,
 enhancing data retrieval and management capabilities.
+<br/>
 • Enabled administrators to effortlessly manage information by facilitating **Excel sheet** uploads and
 manual data entry, significantly optimizing operational efficiency.
+<br/>
 • Empowered various administrative roles including **PG student admin**, **Teaching assistant admin**,
 **Space admin**, **Equipment admin**, and a **Super user**, with tailored access to multiple dashboards
 and functionalities.
+<br/>
 • Successfully managed data for over **500 students**, **20 labs**, and **10 equipment** categories, achieving
 a remarkable **60%** reduction in manual workload.
+<br/>
 • Tech: **HTML**, **CSS**, **JavaScript**, **Flask**, **SQLite**, **Bootstrap**
 
 # HOME PAGE
